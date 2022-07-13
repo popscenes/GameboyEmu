@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdio.h>
+#include <malloc.h>
 
 typedef struct {
 	uint8_t  entryPoint[4];
@@ -25,7 +27,7 @@ typedef struct {
 rom_header_t;
 
 typedef struct {
-	rom_header_t header;
+	rom_header_t* header;
 	uint8_t* romData;
 } cart_t;
 
