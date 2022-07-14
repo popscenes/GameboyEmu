@@ -143,10 +143,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cart.cpp" />
+    <ClCompile Include="cpu.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cart.h" />
+    <ClInclude Include="cpu.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
