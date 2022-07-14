@@ -1,8 +1,10 @@
 #include "Cart.h"
 
-cart_t loadCart(char* filename)
+cart_t cart = { 0 };
+
+int loadCart(char* filename)
 {
-	cart_t cart = { 0 };
+	
 	long cartSize = 0;
 	FILE* cartFile;
 	errno_t fopenresult = fopen_s(&cartFile, filename, "r");
@@ -26,6 +28,11 @@ cart_t loadCart(char* filename)
 	printf("Cartridge Loaded:\n");
 	printf("Title    : %s\n", cart.header->title);
 
-	return cart;
+	return 0;
 	
+}
+
+uint8_t readyByteFromCart(uint16_t address)
+{
+	return cart.romData[address];
 }
