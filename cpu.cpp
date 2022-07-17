@@ -1,5 +1,6 @@
 #include "cpu.h""
-#include "cart.h""
+#include "bus.h""
+#include <stdio.h>
 
 cpu_t cpuInstance = { 0 };
 
@@ -19,7 +20,7 @@ void jump(uint16_t address)
 }
 
 void cpuStep() {
-	uint8_t opCode = readyByteFromCart(cpuInstance.pc);
+	uint8_t opCode = readByteFromAddress(cpuInstance.pc);
 	cpuInstance.pc++;
 	instruction_t inst = { 0 };
 	if (opCode == 0x00)
@@ -28,11 +29,7 @@ void cpuStep() {
 	}
 	else if (opCode == 0x31)
 	{
-		
-		uint8_t loByte = readyByteFromCart(cpuInstance.pc);
-		uint8_t hiByte = readyByteFromCart(cpuInstance.pc + 1);
-		
-		uint16_t value = (hiByte << 8) | (loByte);
+		uint16_t value = readWordFromAddress(cpuInstance.pc);
 
 		cpuInstance.pc += 2;
 		cpuInstance.sp = value;
@@ -41,7 +38,7 @@ void cpuStep() {
 	else if (opCode == 0x3E)
 	{
 		
-		uint8_t byte = readyByteFromCart(cpuInstance.pc);
+		uint8_t byte = readByteFromAddress(cpuInstance.pc);
 
 		cpuInstance.pc++;
 		cpuInstance.a = byte;
@@ -50,13 +47,18 @@ void cpuStep() {
 	else if (opCode == 0xc3)
 	{
 		
-		uint8_t loByte =  readyByteFromCart(cpuInstance.pc);
-		uint8_t hiByte = readyByteFromCart(cpuInstance.pc+1);
-
-		uint16_t address = (hiByte << 8) | (loByte);
-
+		uint16_t address = readWordFromAddress(cpuInstance.pc);
+		cpuInstance.pc += 2;
 		jump(address);
 		printf("jp %04X\n", address);
+	}
+	else if (opCode == 0xE0)
+	{
+		uint8_t addressOffset = readByteFromAddress(cpuInstance.pc);
+		cpuInstance.pc++;
+
+		writeByteToAddress((addressOffset + 0xff00), cpuInstance.a);
+		printf("LDH ($FF00+%04X)\n", addressOffset);
 	}
 	else if (opCode == 0xf3)
 	{
