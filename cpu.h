@@ -12,7 +12,13 @@ typedef struct {
 
 	uint16_t sp;
 	uint16_t pc;
+	
+	uint8_t currentIstructionOpCode;
+	uint8_t currentIstructionCycles;
+
 } cpu_t;
+
+#define FLAG_ZERO 0b01000000
 
 void cpuInit();
 void cpuStep();
