@@ -152,6 +152,9 @@
     <ClInclude Include="Cart.h" />
     <ClInclude Include="cpu.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\Anthony Borg\Downloads\GBCPUman.pdf" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
