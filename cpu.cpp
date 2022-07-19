@@ -18,12 +18,25 @@ void jump(uint16_t address)
 {
 	cpuInstance.pc = address;
 }
-void setFlags(uint8_t value)
+void setFlags(uint8_t value, uint8_t subtract, uint8_t halfCarry, uint8_t carry)
 {
 	cpuInstance.f = 0;
+
 	if (value == 0)
 	{
 		cpuInstance.f = cpuInstance.f | FLAG_ZERO;
+	}
+	if (subtract != 0)
+	{
+		cpuInstance.f = cpuInstance.f | FLAG_SUBTRACT;
+	}
+	if (halfCarry != 0)
+	{
+		cpuInstance.f = cpuInstance.f | FLAG_HALF_CARRY;
+	}
+	if (carry != 0)
+	{
+		cpuInstance.f = cpuInstance.f | FLAG_CARRY;
 	}
 }
 
@@ -35,6 +48,32 @@ void cpuStep() {
 	{
 		printf("noop\n");
 		cpuInstance.currentIstructionCycles = 4;
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x05)
+	{
+		uint8_t originalValue = cpuInstance.b;
+		cpuInstance.b--;
+
+		uint8_t hcarry = (((originalValue & 0xF) - (cpuInstance.b & 0xF)) & 0x10) == 0x10;
+		cpuInstance.currentIstructionCycles = 4;
+		setFlags(cpuInstance.b, 1, hcarry,0);
+		printf("DEC B\n");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x06)
+	{
+		uint8_t loByte = readByteFromAddress(cpuInstance.pc);
+		cpuInstance.pc++;
+		cpuInstance.currentIstructionCycles = 8;
+		cpuInstance.b = loByte;
+		printf("LD B,%02X\n", loByte);
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x0e)
+	{
+		uint8_t loByte = readByteFromAddress(cpuInstance.pc);
+		cpuInstance.pc++;
+		cpuInstance.currentIstructionCycles = 8;
+		cpuInstance.c = loByte;
+		printf("LD C,%02X\n", loByte);
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x21)
 	{
@@ -60,6 +99,17 @@ void cpuStep() {
 		cpuInstance.currentIstructionCycles = 12;
 		printf("LD SP,%04X\n", value);
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x32)
+	{
+		
+		uint16_t address = (cpuInstance.h << 8) | cpuInstance.l;
+		writeByteToAddress(address, cpuInstance.a);
+		address--;
+		cpuInstance.h = (address & 0xFF00) >> 8;
+		cpuInstance.l = (address & 0x00FF);
+		cpuInstance.currentIstructionCycles = 8;
+		printf("LD (HL-),A\n");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x3E)
 	{
 		
@@ -74,7 +124,7 @@ void cpuStep() {
 	else if (cpuInstance.currentIstructionOpCode == 0xaf)
 	{
 		uint8_t value = cpuInstance.a ^ cpuInstance.a;
-		setFlags(value);
+		setFlags(value, 0,0,0);
 		cpuInstance.currentIstructionCycles = 4;
 		printf("xor A\n");
 	}
