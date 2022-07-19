@@ -18,7 +18,11 @@ typedef struct {
 
 } cpu_t;
 
-#define FLAG_ZERO 0b01000000
+#define FLAG_ZERO 0b10000000
+#define FLAG_SUBTRACT 0b01000000
+#define FLAG_HALF_CARRY 0b00100000
+#define FLAG_CARRY 0b00010000
+
 
 void cpuInit();
 void cpuStep();
