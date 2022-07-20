@@ -18,6 +18,12 @@ void jump(uint16_t address)
 {
 	cpuInstance.pc = address;
 }
+
+uint8_t isFlagSet(uint8_t flag)
+{
+	return cpuInstance.f & flag;
+}
+
 void setFlags(uint8_t value, uint8_t subtract, uint8_t halfCarry, uint8_t carry)
 {
 	cpuInstance.f = 0;
@@ -67,6 +73,16 @@ void cpuStep() {
 		cpuInstance.b = loByte;
 		printf("LD B,%02X\n", loByte);
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x0d)
+	{
+		uint8_t originalValue = cpuInstance.b;
+		cpuInstance.c--;
+
+		uint8_t hcarry = (((originalValue & 0xF) - (cpuInstance.b & 0xF)) & 0x10) == 0x10;
+		cpuInstance.currentIstructionCycles = 4;
+		setFlags(cpuInstance.b, 1, hcarry, 0);
+		printf("DEC C\n");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x0e)
 	{
 		uint8_t loByte = readByteFromAddress(cpuInstance.pc);
@@ -74,6 +90,22 @@ void cpuStep() {
 		cpuInstance.currentIstructionCycles = 8;
 		cpuInstance.c = loByte;
 		printf("LD C,%02X\n", loByte);
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x20)
+	{
+		int8_t jumpBytes = readByteFromAddress(cpuInstance.pc);
+		cpuInstance.pc++;
+		if (isFlagSet(FLAG_ZERO))
+		{
+			cpuInstance.pc += jumpBytes;
+			cpuInstance.currentIstructionCycles = 12;
+		}
+		else
+		{
+			cpuInstance.currentIstructionCycles = 8;
+		}
+
+		printf("JR NZ,%02X\n", (uint8_t)jumpBytes);
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x21)
 	{
@@ -156,6 +188,15 @@ void cpuStep() {
 
 		cpuInstance.currentIstructionCycles = 16;
 		printf("LD %04X, A\n", address);
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xf0)
+	{
+		uint8_t address = readByteFromAddress(cpuInstance.pc);
+		cpuInstance.pc++;
+		uint8_t value = readByteFromAddress(address + 0xff00);
+		cpuInstance.a = value;
+		cpuInstance.currentIstructionCycles = 12;
+		printf("LDH A,($FF00+%04X)\n", address);
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0xf3)
 	{
