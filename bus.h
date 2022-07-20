@@ -12,10 +12,12 @@
 
 #define IO_REG_INTERRUPT_FLAG 0xff0f
 #define IO_REG_LCDC_Y_POS 0xff44
+#define IO_REG_INTERRUPT_ENABLE 0xffff
 
 typedef struct {
 	uint8_t lcdYPos; //temp did lcd emulated
 	uint8_t interruptFlag;
+	uint8_t interruptEnable;
 } hardwareRegisters_t;
 
 typedef struct {
