@@ -2,6 +2,7 @@
 #include "cart.h"
 
 internalMemory_t internalMemory = { 0 };
+hardwareRegisters_t hardwareRegisters = { 0 };
 
 uint16_t readWordFromAddress(uint16_t adderss) {
 	
@@ -13,17 +14,33 @@ uint16_t readWordFromAddress(uint16_t adderss) {
 		loByte = readyByteFromCart(adderss);
 		hiByte = readyByteFromCart(adderss + 1);
 	}
+	else if (adderss == IO_REG_INTERRUPT_FLAG)
+	{
+		return hardwareRegisters.interruptFlag;
+	}
+	else if (adderss >= INTERNAL_RAM_START_ADDRESS && adderss <= INTERNAL_RAM_END_ADDRESS)
+	{
+		adderss -= INTERNAL_RAM_START_ADDRESS;
+
+		loByte = internalMemory.internalRam[adderss];
+		hiByte = internalMemory.internalRam[adderss+1];
+	}
 	else if (adderss >= HIGH_RAM_START_ADDRESS && adderss <= HIGH_RAM_END_ADDRESS)
 	{
 		adderss -= HIGH_RAM_START_ADDRESS;
 
 		loByte = internalMemory.highRam[adderss];
-		hiByte = internalMemory.highRam[adderss+1];
+		hiByte = internalMemory.highRam[adderss + 1];
+	}
+	else
+	{
+		printf("ADRESS NOT IMPLEMENTED!!\n");
 	}
 
 	uint16_t value = (hiByte << 8) | (loByte);
 	return value;
 }
+
 uint8_t readByteFromAddress(uint16_t adderss)
 {
 	uint8_t byte = 0;
@@ -31,11 +48,35 @@ uint8_t readByteFromAddress(uint16_t adderss)
 	{
 		byte = readyByteFromCart(adderss);
 	}
+	else if (adderss == IO_REG_INTERRUPT_FLAG)
+	{
+		return hardwareRegisters.interruptFlag;
+	}
+	else if (adderss == IO_REG_LCDC_Y_POS)
+	{
+		//temp did lcd emulated
 
+
+		hardwareRegisters.lcdYPos++;
+		if (hardwareRegisters.lcdYPos > 153)
+		{
+			hardwareRegisters.lcdYPos = 0;
+		}
+		return hardwareRegisters.lcdYPos;
+	}
+	else if (adderss >= INTERNAL_RAM_START_ADDRESS && adderss <= INTERNAL_RAM_END_ADDRESS)
+	{
+		adderss -= INTERNAL_RAM_START_ADDRESS;
+		byte = internalMemory.internalRam[adderss];
+	}
 	else if (adderss >= HIGH_RAM_START_ADDRESS && adderss <= HIGH_RAM_END_ADDRESS)
 	{
 		adderss -= HIGH_RAM_START_ADDRESS;
 		byte = internalMemory.highRam[adderss];
+	}
+	else
+	{
+		printf("ADRESS NOT IMPLEMENTED!!\n");
 	}
 
 	return byte;
@@ -43,7 +84,7 @@ uint8_t readByteFromAddress(uint16_t adderss)
 
 void writeWordToAddress(uint16_t adderss, uint16_t value)
 {
-
+	printf("ADRESS NOT IMPLEMENTED!!\n");
 }
 
 void writeByteToAddress(uint16_t adderss, uint8_t value)
@@ -52,11 +93,24 @@ void writeByteToAddress(uint16_t adderss, uint8_t value)
 	if (adderss <= CART_END_ADDRESS)
 	{
 	}
+	else if (adderss >= INTERNAL_RAM_START_ADDRESS && adderss <= INTERNAL_RAM_END_ADDRESS)
+	{
 
+		adderss -= INTERNAL_RAM_START_ADDRESS;
+		internalMemory.internalRam[adderss] = value;
+	}
+	else if (adderss == IO_REG_INTERRUPT_FLAG)
+	{
+		hardwareRegisters.interruptFlag = value;
+	}
 	else if (adderss >= HIGH_RAM_START_ADDRESS && adderss <= HIGH_RAM_END_ADDRESS)
 	{
 		
 		adderss -= HIGH_RAM_START_ADDRESS;
 		internalMemory.highRam[adderss] = value;
+	}
+	else
+	{
+		printf("ADRESS NOT IMPLEMENTED!!\n");
 	}
 }
