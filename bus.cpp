@@ -32,6 +32,10 @@ uint16_t readWordFromAddress(uint16_t adderss) {
 		loByte = internalMemory.highRam[adderss];
 		hiByte = internalMemory.highRam[adderss + 1];
 	}
+	else if (adderss == IO_REG_INTERRUPT_ENABLE)
+	{
+		return hardwareRegisters.interruptFlag;
+	}
 	else
 	{
 		printf("ADRESS NOT IMPLEMENTED!!\n");
@@ -74,6 +78,10 @@ uint8_t readByteFromAddress(uint16_t adderss)
 		adderss -= HIGH_RAM_START_ADDRESS;
 		byte = internalMemory.highRam[adderss];
 	}
+	else if (adderss == IO_REG_INTERRUPT_ENABLE)
+	{
+		return hardwareRegisters.interruptEnable;
+	}
 	else
 	{
 		printf("ADRESS NOT IMPLEMENTED!!\n");
@@ -108,6 +116,10 @@ void writeByteToAddress(uint16_t adderss, uint8_t value)
 		
 		adderss -= HIGH_RAM_START_ADDRESS;
 		internalMemory.highRam[adderss] = value;
+	}
+	else if (adderss == IO_REG_INTERRUPT_ENABLE)
+	{
+		hardwareRegisters.interruptEnable = value;
 	}
 	else
 	{
