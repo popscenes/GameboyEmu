@@ -107,7 +107,7 @@ void cpuStep() {
 	{
 		int8_t jumpBytes = readByteFromAddress(cpuInstance.pc);
 		cpuInstance.pc++;
-		if (isFlagSet(FLAG_ZERO))
+		if (!isFlagSet(FLAG_ZERO))
 		{
 			cpuInstance.pc += jumpBytes;
 			cpuInstance.currentIstructionCycles = 12;
@@ -191,6 +191,20 @@ void cpuStep() {
 	{
 		printf("DI");
 		cpuInstance.currentIstructionCycles = 4;
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xfe)
+	{
+		
+		uint8_t value = readByteFromAddress(cpuInstance.pc);
+		uint8_t compare = cpuInstance.a - value;
+
+		uint8_t hcarry = (((cpuInstance.a & 0xF) - (compare & 0xF)) & 0x10) == 0x10;
+		uint8_t carry = (cpuInstance.a < value);
+		setFlags(compare, 1, hcarry, carry);
+
+		cpuInstance.pc++;
+		cpuInstance.currentIstructionCycles = 8;
+		printf("CP %02X", value);
 	}
 	else
 	{
