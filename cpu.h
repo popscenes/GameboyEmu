@@ -7,9 +7,11 @@ typedef struct {
 	uint8_t c;
 	uint8_t d;
 	uint8_t e;
-	uint8_t h;
-	uint8_t l;
-
+	struct {
+		uint8_t h;
+		uint8_t l;
+	};
+	uint16_t hl;
 	uint16_t sp;
 	uint16_t pc;
 	
