@@ -17,6 +17,9 @@ typedef struct {
 	
 	uint8_t currentIstructionOpCode;
 	uint8_t currentIstructionCycles;
+	uint64_t totalCycles;
+
+	char currentInstruction[];
 
 } cpu_t;
 

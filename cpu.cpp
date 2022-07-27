@@ -49,7 +49,7 @@ void setFlags(uint8_t value, uint8_t subtract, uint8_t halfCarry, uint8_t carry)
 void LD_MemTo8BitReg(cpu_t * cpu, uint8_t* reg, char regName)
 {
 	
-	uint8_t loByte = readByteFromAddress(cpuInstance.pc);
+	uint8_t loByte = readByteFromAddress(cpu->pc);
 	cpu->pc++;
 	cpu->currentIstructionCycles = 8;
 	*reg = loByte;
@@ -58,7 +58,7 @@ void LD_MemTo8BitReg(cpu_t * cpu, uint8_t* reg, char regName)
 
 void LD_MemTo16BitReg(cpu_t* cpu, uint16_t* reg, const char* regName)
 {
-	uint16_t word = readWordFromAddress(cpuInstance.pc);
+	uint16_t word = readWordFromAddress(cpu->pc);
 	cpu->pc += 2;
 	*reg = word;
 	cpu->currentIstructionCycles = 12;

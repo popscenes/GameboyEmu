@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include "Cart.h"
 #include "cpu.h"
+#include <Windows.h>
 
 int main(int argc, char* args[])
 {
+	LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds;
+	LARGE_INTEGER Frequency;
+
 	char str1[20];
 	printf("running.....\n");
 	if (argc < 2)
@@ -17,7 +21,18 @@ int main(int argc, char* args[])
 
 	while (true)
 	{
+		
+
+		QueryPerformanceFrequency(&Frequency);
+		QueryPerformanceCounter(&StartingTime);
+
 		cpuStep();
+
+		QueryPerformanceCounter(&EndingTime);
+		ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
+
+		ElapsedMicroseconds.QuadPart *= 1000000;
+		ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
 	}
 
 	printf("press enter to exit\n");

@@ -151,6 +151,7 @@
     <ClInclude Include="bus.h" />
     <ClInclude Include="Cart.h" />
     <ClInclude Include="cpu.h" />
+    <ClInclude Include="GameBoy.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="C:\Users\Anthony Borg\Downloads\GBCPUman.pdf" />

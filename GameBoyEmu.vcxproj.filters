@@ -38,6 +38,9 @@
     <ClInclude Include="bus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameBoy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="C:\Users\Anthony Borg\Downloads\GBCPUman.pdf" />
