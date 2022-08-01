@@ -38,7 +38,7 @@ uint16_t readWordFromAddress(uint16_t adderss) {
 	}
 	else
 	{
-		printf(" [ADRESS NOT IMPLEMENTED] ");
+		//printf(" [ADRESS NOT IMPLEMENTED] ");
 	}
 
 	uint16_t value = (hiByte << 8) | (loByte);
@@ -84,7 +84,7 @@ uint8_t readByteFromAddress(uint16_t adderss)
 	}
 	else
 	{
-		printf(" [ADRESS NOT IMPLEMENTED] ");
+		//printf(" [ADRESS NOT IMPLEMENTED] ");
 	}
 
 	return byte;
@@ -92,7 +92,7 @@ uint8_t readByteFromAddress(uint16_t adderss)
 
 void writeWordToAddress(uint16_t adderss, uint16_t value)
 {
-	printf(" [ADRESS NOT IMPLEMENTED] ");
+	//printf(" [ADRESS NOT IMPLEMENTED] ");
 }
 
 void writeByteToAddress(uint16_t adderss, uint8_t value)
@@ -123,6 +123,6 @@ void writeByteToAddress(uint16_t adderss, uint8_t value)
 	}
 	else
 	{
-		printf(" [ADRESS NOT IMPLEMENTED] ");
+		//printf(" [ADRESS NOT IMPLEMENTED] ");
 	}
 }

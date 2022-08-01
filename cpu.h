@@ -28,6 +28,7 @@ typedef struct {
 #define FLAG_HALF_CARRY 0b00100000
 #define FLAG_CARRY 0b00010000
 
-
 void cpuInit();
 void cpuStep();
+
+uint8_t cpuCurrentIstructionCycles();
