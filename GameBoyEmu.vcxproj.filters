@@ -21,10 +21,10 @@
     <ClCompile Include="Cart.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cpu.cpp">
+    <ClCompile Include="bus.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bus.cpp">
+    <ClCompile Include="cpu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
