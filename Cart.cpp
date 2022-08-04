@@ -10,7 +10,7 @@ int loadCart(char* filename)
 	errno_t fopenresult = fopen_s(&cartFile, filename, "r");
 	if (fopenresult != 0)
 	{
-		//printf("error opening %s file result %d", filename, fopenresult);
+		printf("error opening %s file result %d", filename, fopenresult);
 	}
 	
 	fseek(cartFile, 0L, SEEK_END);
@@ -25,8 +25,8 @@ int loadCart(char* filename)
 
 	cart.header = (rom_header_t*)(cart.romData + 0x100);
 
-	//printf("Cartridge Loaded:\n");
-	//printf("Title    : %s\n", cart.header->title);
+	printf("Cartridge Loaded:\n");
+	printf("Title    : %s\n", cart.header->title);
 
 	return 0;
 	
