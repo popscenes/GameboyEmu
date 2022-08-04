@@ -7,8 +7,6 @@ cpu_t cpuInstance = { 0 };
 
 typedef struct {
 	char name[8];
-	uint8_t instructionLength;
-	uint8_t type;
 } instruction_t;
 
 uint8_t cpuCurrentIstructionCycles()
@@ -16,7 +14,10 @@ uint8_t cpuCurrentIstructionCycles()
 	return cpuInstance.currentIstructionCycles;
 }
 
+const char * instructions[0x100];
+
 void cpuInit() {
+	instructions[0x00] = "NOP";
 	cpuInstance.pc = 0x100;
 }
 
