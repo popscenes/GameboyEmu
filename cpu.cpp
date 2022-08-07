@@ -1,5 +1,5 @@
-#include "cpu.h""
-#include "bus.h""
+#include "cpu.h"
+#include "bus.h"
 #include <stdio.h>
 #include <windows.h>
 
@@ -124,6 +124,13 @@ void DEC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 	printf("DEC %s", regName);
 }
 
+void DEC_16BitReg(cpu_t* cpu, uint16_t* reg, const char* regName)
+{
+	(*reg)--;
+	cpu->currentIstructionCycles = 8;
+	printf("DEC %s", regName);
+}
+
 void INC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 {
 	uint8_t originalValue = *reg;
@@ -155,6 +162,10 @@ void cpuStep() {
 		printf("noop");
 		cpuInstance.currentIstructionCycles = 4;
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x01)
+	{
+		LD_WordTo16BitReg(&cpuInstance, &cpuInstance.bc, "BC");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x05)
 	{
 		DEC_8BitReg(&cpuInstance, &cpuInstance.b, "B");
@@ -162,6 +173,10 @@ void cpuStep() {
 	else if (cpuInstance.currentIstructionOpCode == 0x06)
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.b, 'B');
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x0b)
+	{
+		DEC_16BitReg(&cpuInstance, &cpuInstance.bc, "BC");
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x0c)
 	{
@@ -175,9 +190,17 @@ void cpuStep() {
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.c, 'C');
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x11)
+	{
+		LD_WordTo16BitReg(&cpuInstance, &cpuInstance.de, "DE");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x16)
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.d, 'D');
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x1b)
+	{
+		DEC_16BitReg(&cpuInstance, &cpuInstance.de, "DE");
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x1e)
 	{
@@ -207,6 +230,10 @@ void cpuStep() {
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'H');
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x2b)
+	{
+		DEC_16BitReg(&cpuInstance, &cpuInstance.hl, "HL");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x2e)
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'L');
@@ -230,6 +257,10 @@ void cpuStep() {
 	else if (cpuInstance.currentIstructionOpCode == 0x36)
 	{
 		LD_ByteToAddress(&cpuInstance, cpuInstance.hl, "HL");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x3b)
+	{
+	DEC_16BitReg(&cpuInstance, &cpuInstance.sp, "SP");
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x3E)
 	{
