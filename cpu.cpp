@@ -53,6 +53,18 @@ void setFlags(uint8_t value, uint8_t subtract, uint8_t halfCarry, uint8_t carry)
 	}
 }
 
+void PushWordToStack(cpu_t* cpu, uint16_t word)
+{
+	uint8_t loByte = word & 0x00ff;
+	uint8_t hiByte = (word >> 8) & 0x00ff;
+
+	cpu->sp--;
+	writeByteToAddress(cpu->sp, loByte);
+	cpu->sp--;
+	writeByteToAddress(cpu->sp, hiByte);
+	
+}
+
 void LD_RegValueToRegAddressHigh(cpu_t* cpu, uint8_t* regVal, uint8_t* regAddress, const char* regValName, const char* regAddressName)
 {
 	writeByteToAddress((*regAddress + 0xff00), *regVal);
@@ -98,7 +110,7 @@ void LD_WordTo16BitReg(cpu_t* cpu, uint16_t* reg, const char* regName)
 	*reg = word;
 	cpu->currentIstructionCycles = 12;
 
-	printf("LD %s, %04X%", regName, word);
+	printf("LD %s, %04X", regName, word);
 }
 
 void DEC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
@@ -110,6 +122,27 @@ void DEC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 	cpu->currentIstructionCycles = 4;
 	setFlags(*reg, 1, hcarry, 0);
 	printf("DEC %s", regName);
+}
+
+void INC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
+{
+	uint8_t originalValue = *reg;
+	(*reg)++;
+
+	uint8_t hcarry = (((originalValue & 0xF) + (*reg & 0xF)) & 0x10) == 0x10;
+	cpu->currentIstructionCycles = 4;
+	setFlags(*reg, 0, hcarry, 0);
+	printf("DEC %s", regName);
+}
+
+void Call(cpu_t* cpu)
+{
+	uint16_t addressToJump = readWordFromAddress(cpu->pc);
+	uint16_t addressToPush = cpu->pc+2;
+	PushWordToStack(cpu, addressToPush);
+	cpu->pc = addressToJump;
+	cpu->currentIstructionCycles = 24;
+	printf("CALL %0x4", addressToJump);
 }
 
 void cpuStep() {
@@ -130,6 +163,10 @@ void cpuStep() {
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.b, 'B');
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x0c)
+	{
+		INC_8BitReg(&cpuInstance, &cpuInstance.c, "C");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x0d)
 	{
 		DEC_8BitReg(&cpuInstance, &cpuInstance.c, "C");
@@ -137,6 +174,14 @@ void cpuStep() {
 	else if (cpuInstance.currentIstructionOpCode == 0x0e)
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.c, 'C');
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x16)
+	{
+		LD_ByteToReg(&cpuInstance, &cpuInstance.d, 'D');
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x1e)
+	{
+		LD_ByteToReg(&cpuInstance, &cpuInstance.e, 'E');
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x20)
 	{
@@ -157,6 +202,14 @@ void cpuStep() {
 	else if (cpuInstance.currentIstructionOpCode == 0x21)
 	{
 		LD_WordTo16BitReg(&cpuInstance, &cpuInstance.hl, "HL");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x26)
+	{
+		LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'H');
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x2e)
+	{
+		LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'L');
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x2a)
 	{
@@ -198,6 +251,10 @@ void cpuStep() {
 
 		cpuInstance.currentIstructionCycles = 16;
 		printf("jp %04X", address);
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xcd)
+	{
+		Call(&cpuInstance);
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0xE0)
 	{
@@ -258,7 +315,7 @@ void cpuStep() {
 
 	cpuInstance.totalCycles += cpuInstance.currentIstructionCycles;
 
-	printf("\tA:%02X B:%02X C:%02X D:%02X E:%02X F:%02X HL:%04X\n", cpuInstance.a, cpuInstance.b, cpuInstance.c, cpuInstance.d, cpuInstance.e, cpuInstance.f, cpuInstance.hl);
+	printf("\tA:%02X B:%02X C:%02X D:%02X E:%02X F:%02X HL:%04X SP:%04X\n", cpuInstance.a, cpuInstance.b, cpuInstance.c, cpuInstance.d, cpuInstance.e, cpuInstance.f, cpuInstance.hl, cpuInstance.sp);
 
 }
 

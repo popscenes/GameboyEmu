@@ -8,39 +8,8 @@ uint16_t readWordFromAddress(uint16_t adderss) {
 	
 	uint8_t loByte = 0;
 	uint8_t hiByte = 0;
-
-	if (adderss <= CART_END_ADDRESS)
-	{
-		loByte = readyByteFromCart(adderss);
-		hiByte = readyByteFromCart(adderss + 1);
-	}
-	else if (adderss == IO_REG_INTERRUPT_FLAG)
-	{
-		return hardwareRegisters.interruptFlag;
-	}
-	else if (adderss >= INTERNAL_RAM_START_ADDRESS && adderss <= INTERNAL_RAM_END_ADDRESS)
-	{
-		adderss -= INTERNAL_RAM_START_ADDRESS;
-
-		loByte = internalMemory.internalRam[adderss];
-		hiByte = internalMemory.internalRam[adderss+1];
-	}
-	else if (adderss >= HIGH_RAM_START_ADDRESS && adderss <= HIGH_RAM_END_ADDRESS)
-	{
-		adderss -= HIGH_RAM_START_ADDRESS;
-
-		loByte = internalMemory.highRam[adderss];
-		hiByte = internalMemory.highRam[adderss + 1];
-	}
-	else if (adderss == IO_REG_INTERRUPT_ENABLE)
-	{
-		return hardwareRegisters.interruptFlag;
-	}
-	else
-	{
-		printf(" [ADRESS NOT IMPLEMENTED] ");
-	}
-
+	loByte = readByteFromAddress(adderss);
+	hiByte = readByteFromAddress(adderss+1);
 	uint16_t value = (hiByte << 8) | (loByte);
 	return value;
 }
@@ -92,7 +61,11 @@ uint8_t readByteFromAddress(uint16_t adderss)
 
 void writeWordToAddress(uint16_t adderss, uint16_t value)
 {
-	printf(" [ADRESS NOT IMPLEMENTED] ");
+	uint8_t loByte = value & 0x00ff;
+	uint8_t hiByte = (value >> 8) & 0x00ff;
+	writeByteToAddress(adderss, loByte);
+	writeByteToAddress(adderss+1, hiByte);
+	
 }
 
 void writeByteToAddress(uint16_t adderss, uint8_t value)
