@@ -65,11 +65,26 @@ void PushWordToStack(cpu_t* cpu, uint16_t word)
 	
 }
 
+void LD_8bitRegTo8BitReg(cpu_t* cpu, uint8_t* regDest, uint8_t* regSource, const char* regDestName, const char* regSourceName)
+{
+	(*regDest) = (*regSource);
+	cpuInstance.currentIstructionCycles = 4;
+	printf("LD %s, %s", regDestName, regSourceName);
+}
+
 void LD_RegValueToRegAddressHigh(cpu_t* cpu, uint8_t* regVal, uint8_t* regAddress, const char* regValName, const char* regAddressName)
 {
 	writeByteToAddress((*regAddress + 0xff00), *regVal);
 	cpuInstance.currentIstructionCycles = 8;
 	printf("LD (FF00+%s), %s", regAddressName, regValName);
+}
+
+void LD_ByteAtHLAddressToReg(cpu_t* cpu, uint8_t* reg, const char* regName)
+{
+	uint8_t loByte = readByteFromAddress(cpu->hl);
+	*reg = loByte;
+	cpu->currentIstructionCycles = 8;
+	printf("LD %s, (HL+)", regName);
 }
 
 void LD_ByteAtHLAddressToRegWithInc(cpu_t* cpu, uint8_t* reg, const char* regName)
@@ -265,6 +280,252 @@ void cpuStep() {
 	else if (cpuInstance.currentIstructionOpCode == 0x3E)
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.a, 'A');
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x40)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.b, "B", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x41)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.c, "B", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x42)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.d, "B", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x43)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.e, "B", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x44)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.h, "B", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x45)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.l, "B", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x46)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.b, "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x47)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.b, &cpuInstance.a, "B", "A");
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x48)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.b, "C", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x49)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.c, "C", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x4a)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.d, "C", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x4b)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.e, "C", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x4c)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.h, "C", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x4d)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.l, "C", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x4e)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.c, "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x4f)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.c, &cpuInstance.a, "C", "A");
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x50)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.b, "D", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x51)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.c, "D", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x52)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.d, "D", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x53)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.e, "D", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x54)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.h, "D", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x55)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.l, "D", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x56)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.d, "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x57)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.d, &cpuInstance.a, "D", "A");
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x58)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.b, "E", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x59)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.c, "E", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x5a)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.d, "E", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x5b)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.e, "E", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x5c)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.h, "E", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x5d)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.l, "E", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x5e)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.e, "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x5f)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.e, &cpuInstance.a, "E", "A");
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x60)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.b, "H", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x61)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.c, "H", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x62)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.d, "H", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x63)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.e, "H", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x64)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.h, "H", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x65)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.l, "H", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x66)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.h, "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x67)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.h, &cpuInstance.a, "H", "A");
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x68)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.b, "L", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x69)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.c, "L", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x6a)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.d, "L", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x6b)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.e, "L", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x6c)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.h, "L", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x6d)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.l, "L", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x6e)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.l, "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x6f)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.l, &cpuInstance.a, "L", "A");
+	}
+
+
+
+	else if (cpuInstance.currentIstructionOpCode == 0x78)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.b, "A", "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x78)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.c, "A", "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x7a)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.d, "A", "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x7b)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.e, "A", "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x7c)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.h, "A", "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x7d)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.l, "A", "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0x7e)
+	{
+		LD_ByteAtHLAddressToReg(&cpuInstance, &cpuInstance.a, "A");
+	}
+	
+	else if (cpuInstance.currentIstructionOpCode == 0x7f)
+	{
+		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.a,  "A", "A");
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0xaf)
 	{
