@@ -65,6 +65,47 @@ void PushWordToStack(cpu_t* cpu, uint16_t word)
 	
 }
 
+uint16_t PopWordFromStack(cpu_t* cpu)
+{
+	uint8_t hiByte = readByteFromAddress(cpu->sp++);
+	uint8_t loByte = readByteFromAddress(cpu->sp++);
+
+	uint16_t value = (hiByte << 8) | (loByte);
+	return value;
+}
+
+
+void OR_PCAddress(cpu_t* cpu)
+{
+	uint8_t value = readByteFromAddress(cpu->pc);
+	cpu->pc++;
+	cpu->a = cpu->a | value;
+	cpuInstance.currentIstructionCycles = 8;
+	setFlags(cpu->a, 0, 0, 0);
+	printf("LD #%02x", value);
+
+}
+
+void OR_HLAddress(cpu_t* cpu)
+{
+	uint8_t value = readByteFromAddress(cpu->hl);
+	cpu->a = cpu->a | value;
+	cpuInstance.currentIstructionCycles = 8;
+	setFlags(cpu->a, 0, 0, 0);
+	printf("LD (HL)");
+
+}
+
+
+void OR_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
+{
+	cpu->a = cpu->a | *reg;
+	cpuInstance.currentIstructionCycles = 4;
+	setFlags(cpu->a, 0, 0, 0);
+	printf("LD %s", regName);
+
+}
+
 void LD_8bitRegTo8BitReg(cpu_t* cpu, uint8_t* regDest, uint8_t* regSource, const char* regDestName, const char* regSourceName)
 {
 	(*regDest) = (*regSource);
@@ -155,6 +196,14 @@ void INC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 	cpu->currentIstructionCycles = 4;
 	setFlags(*reg, 0, hcarry, 0);
 	printf("DEC %s", regName);
+}
+
+void Ret(cpu_t* cpu)
+{
+	uint16_t address = PopWordFromStack(cpu);
+	cpu->currentIstructionCycles = 16;
+	cpu->pc = address;
+	printf("RET");
 }
 
 void Call(cpu_t* cpu)
@@ -534,6 +583,42 @@ void cpuStep() {
 		cpuInstance.currentIstructionCycles = 4;
 		printf("xor A");
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb0)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.b, "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb1)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.c, "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb2)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.d, "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb3)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.e, "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb4)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.h, "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb5)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.l, "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xb5)
+	{
+		OR_HLAddress(&cpuInstance);
+	}
+
+	
+	else if (cpuInstance.currentIstructionOpCode == 0xb7)
+	{
+		OR_8BitReg(&cpuInstance, &cpuInstance.a, "A");
+	}
+
+	
 	else if (cpuInstance.currentIstructionOpCode == 0xc3)
 	{
 		
@@ -544,6 +629,11 @@ void cpuStep() {
 		cpuInstance.currentIstructionCycles = 16;
 		printf("jp %04X", address);
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0xc9)
+	{
+		Ret(&cpuInstance);
+	}
+	
 	else if (cpuInstance.currentIstructionOpCode == 0xcd)
 	{
 		Call(&cpuInstance);
@@ -584,6 +674,15 @@ void cpuStep() {
 	{
 		printf("DI");
 		cpuInstance.currentIstructionCycles = 4;
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xfb)
+	{
+		printf("EI");
+		cpuInstance.currentIstructionCycles = 4;
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xf6)
+	{
+	OR_PCAddress(&cpuInstance);
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0xfe)
 	{
