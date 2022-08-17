@@ -37,6 +37,7 @@ typedef struct {
 	uint16_t pc;
 	
 	uint8_t currentIstructionOpCode;
+	uint8_t currentIstructionCBOpCode;
 	uint8_t currentIstructionCycles;
 	uint64_t totalCycles;
 
