@@ -30,6 +30,15 @@ uint8_t isFlagSet(uint8_t flag)
 {
 	return cpuInstance.f & flag;
 }
+void setFlag(uint8_t flag)
+{
+	cpuInstance.f = cpuInstance.f | FLAG_ZERO;
+}
+
+void resetFlag(uint8_t flag)
+{
+	cpuInstance.f = cpuInstance.f & ~FLAG_ZERO;
+}
 
 void setFlags(uint8_t value, uint8_t subtract, uint8_t halfCarry, uint8_t carry)
 {
@@ -198,6 +207,33 @@ void INC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 	printf("DEC %s", regName);
 }
 
+void AND_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
+{
+	cpu->a = cpu->a & *reg;
+	setFlags(cpu->a, 0, 1, 0);
+	cpu->currentIstructionCycles = 4;
+	printf("AND %s", regName);
+}
+
+void AND_FromHL(cpu_t* cpu)
+{
+	uint8_t value = readByteFromAddress(cpu->hl);
+	cpu->a = cpu->a & value;
+	setFlags(cpu->a, 0, 1, 0);
+	cpu->currentIstructionCycles = 8;
+	printf("AND d8 %02X", value);
+}
+
+void AND_FromPC(cpu_t* cpu)
+{
+	uint8_t value =  readByteFromAddress(cpu->pc);
+	cpu->pc++;
+	cpu->a = cpu->a & value;
+	setFlags(cpu->a, 0, 1, 0);
+	cpu->currentIstructionCycles = 8;
+	printf("AND d8 %02X", value);
+}
+
 void Ret(cpu_t* cpu)
 {
 	uint16_t address = PopWordFromStack(cpu);
@@ -216,11 +252,32 @@ void Call(cpu_t* cpu)
 	printf("CALL %0x4", addressToJump);
 }
 
+void CPL(cpu_t* cpu)
+{
+	cpu->a = ~cpu->a;
+	cpu->currentIstructionCycles = 4;
+	setFlag(FLAG_SUBTRACT);
+	setFlag(FLAG_HALF_CARRY);
+	printf("CPL");
+}
+
 void cpuStep() {
 	
 	cpuInstance.currentIstructionOpCode = readByteFromAddress(cpuInstance.pc);
-	printf("%04X - %02X :", cpuInstance.pc, cpuInstance.currentIstructionOpCode);
-	cpuInstance.pc++;
+	
+	if (cpuInstance.currentIstructionOpCode == 0xcb)
+	{
+		cpuInstance.currentIstructionCBOpCode = readByteFromAddress(cpuInstance.pc+1);
+		printf("%04X - %02X %02X:", cpuInstance.pc, cpuInstance.currentIstructionOpCode, cpuInstance.currentIstructionCBOpCode);
+		cpuInstance.pc++;
+		cpuInstance.pc++;
+	}
+	else
+	{
+		printf("%04X - %02X :", cpuInstance.pc, cpuInstance.currentIstructionOpCode);
+		cpuInstance.pc++;
+	}
+	
 	if (cpuInstance.currentIstructionOpCode == 0x00)
 	{
 		printf("noop");
@@ -298,13 +355,17 @@ void cpuStep() {
 	{
 		DEC_16BitReg(&cpuInstance, &cpuInstance.hl, "HL");
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0x2a)
+	{
+		LD_ByteAtHLAddressToRegWithInc(&cpuInstance, &cpuInstance.a, "A");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0x2e)
 	{
 		LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'L');
 	}
-	else if (cpuInstance.currentIstructionOpCode == 0x2a)
+	else if (cpuInstance.currentIstructionOpCode == 0x2f)
 	{
-		LD_ByteAtHLAddressToRegWithInc(&cpuInstance, &cpuInstance.a, "A");
+		CPL(&cpuInstance);
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0x31)
 	{
@@ -576,6 +637,38 @@ void cpuStep() {
 	{
 		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.a,  "A", "A");
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa0)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.b, "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa1)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.c, "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa2)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.d, "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa3)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.e, "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa4)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.h, "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa5)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.l, "L");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa6)
+	{
+		AND_FromHL(&cpuInstance);
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa7)
+	{
+		AND_8BitReg(&cpuInstance, &cpuInstance.a, "A");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0xaf)
 	{
 		uint8_t value = cpuInstance.a ^ cpuInstance.a;
@@ -583,6 +676,7 @@ void cpuStep() {
 		cpuInstance.currentIstructionCycles = 4;
 		printf("xor A");
 	}
+
 	else if (cpuInstance.currentIstructionOpCode == 0xb0)
 	{
 		OR_8BitReg(&cpuInstance, &cpuInstance.b, "B");
@@ -633,7 +727,10 @@ void cpuStep() {
 	{
 		Ret(&cpuInstance);
 	}
-	
+	else if (cpuInstance.currentIstructionOpCode == 0xcb)
+	{
+		printf("Unknown CB");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0xcd)
 	{
 		Call(&cpuInstance);
@@ -661,6 +758,11 @@ void cpuStep() {
 		cpuInstance.currentIstructionCycles = 16;
 		printf("LD %04X, A", address);
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0xE6)
+	{
+		AND_FromPC(&cpuInstance);
+	}
+
 	else if (cpuInstance.currentIstructionOpCode == 0xf0)
 	{
 		uint8_t address = readByteFromAddress(cpuInstance.pc);
