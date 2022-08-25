@@ -91,7 +91,7 @@ void OR_PCAddress(cpu_t* cpu)
 	cpu->a = cpu->a | value;
 	cpuInstance.currentIstructionCycles = 8;
 	setFlags(cpu->a, 0, 0, 0);
-	printf("LD #%02x", value);
+	printf("OR #%02x", value);
 
 }
 
@@ -101,7 +101,7 @@ void OR_HLAddress(cpu_t* cpu)
 	cpu->a = cpu->a | value;
 	cpuInstance.currentIstructionCycles = 8;
 	setFlags(cpu->a, 0, 0, 0);
-	printf("LD (HL)");
+	printf("OR (HL)");
 
 }
 
@@ -111,8 +111,42 @@ void OR_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 	cpu->a = cpu->a | *reg;
 	cpuInstance.currentIstructionCycles = 4;
 	setFlags(cpu->a, 0, 0, 0);
-	printf("LD %s", regName);
+	printf("OR %s", regName);
 
+}
+
+void XOR_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
+{
+	cpuInstance.a = cpuInstance.a ^ *reg;
+	setFlags(cpuInstance.a, 0, 0, 0);
+	cpuInstance.currentIstructionCycles = 4;
+	printf("XOR %s", regName);
+
+}
+
+void SWAP_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
+{
+	uint8_t lowNibble =  *reg;
+	uint8_t highNibble = *reg;
+	
+	highNibble = (highNibble << 4) & 0xF0;
+	lowNibble = (lowNibble >> 4) & 0xF0;
+
+	*reg = highNibble | lowNibble;
+
+	cpuInstance.currentIstructionCycles = 8;
+	setFlags(*reg, 0, 0, 0);
+	printf("swap %s", regName);
+
+}
+
+void RST(cpu_t* cpu, uint8_t jumpParam)
+{
+	PushWordToStack(cpu, cpu->pc);
+	
+	cpuInstance.pc = jumpParam;
+	cpuInstance.currentIstructionCycles = 16;
+	printf("RST %x02", jumpParam);
 }
 
 void LD_8bitRegTo8BitReg(cpu_t* cpu, uint8_t* regDest, uint8_t* regSource, const char* regDestName, const char* regSourceName)
@@ -608,7 +642,7 @@ void cpuStep() {
 	{
 		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.b, "A", "B");
 	}
-	else if (cpuInstance.currentIstructionOpCode == 0x78)
+	else if (cpuInstance.currentIstructionOpCode == 0x79)
 	{
 		LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.c, "A", "C");
 	}
@@ -669,12 +703,33 @@ void cpuStep() {
 	{
 		AND_8BitReg(&cpuInstance, &cpuInstance.a, "A");
 	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa8)
+	{
+		XOR_8BitReg(&cpuInstance, &cpuInstance.b, "B");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xa9)
+	{
+		XOR_8BitReg(&cpuInstance, &cpuInstance.c, "C");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xaa)
+	{
+		XOR_8BitReg(&cpuInstance, &cpuInstance.d, "D");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xab)
+	{
+		XOR_8BitReg(&cpuInstance, &cpuInstance.e, "E");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xac)
+	{
+		XOR_8BitReg(&cpuInstance, &cpuInstance.h, "H");
+	}
+	else if (cpuInstance.currentIstructionOpCode == 0xad)
+	{
+		XOR_8BitReg(&cpuInstance, &cpuInstance.l, "L");
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0xaf)
 	{
-		uint8_t value = cpuInstance.a ^ cpuInstance.a;
-		setFlags(value, 0,0,0);
-		cpuInstance.currentIstructionCycles = 4;
-		printf("xor A");
+		XOR_8BitReg(&cpuInstance, &cpuInstance.a, "A");
 	}
 
 	else if (cpuInstance.currentIstructionOpCode == 0xb0)
@@ -729,7 +784,39 @@ void cpuStep() {
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0xcb)
 	{
-		printf("Unknown CB");
+		
+		if (cpuInstance.currentIstructionCBOpCode == 0x30)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.b, "B");
+		}
+		else if (cpuInstance.currentIstructionCBOpCode == 0x31)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.c, "C");
+		}
+		else if (cpuInstance.currentIstructionCBOpCode == 0x32)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.d, "D");
+		}
+		else if (cpuInstance.currentIstructionCBOpCode == 0x33)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.e, "E");
+		}
+		else if (cpuInstance.currentIstructionCBOpCode == 0x34)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.h, "H");
+		}
+		else if (cpuInstance.currentIstructionCBOpCode == 0x35)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.l, "L");
+		}
+		else if (cpuInstance.currentIstructionCBOpCode == 0x37)
+		{
+			SWAP_8BitReg(&cpuInstance, &cpuInstance.a, "A");
+		}
+		else
+		{
+			printf("Unknown CB");
+		}
 	}
 	else if (cpuInstance.currentIstructionOpCode == 0xcd)
 	{
@@ -762,7 +849,10 @@ void cpuStep() {
 	{
 		AND_FromPC(&cpuInstance);
 	}
-
+	else if (cpuInstance.currentIstructionOpCode == 0xEf)
+	{
+		RST(&cpuInstance, 0x28);
+	}
 	else if (cpuInstance.currentIstructionOpCode == 0xf0)
 	{
 		uint8_t address = readByteFromAddress(cpuInstance.pc);
