@@ -83,9 +83,42 @@ uint16_t PopWordFromStack(cpu_t* cpu)
 	return value;
 }
 
+void Jump_HL(cpu_t* cpu)
+{
+	cpu->pc = cpu->hl;
+	cpuInstance.currentIstructionCycles = 4;
+	printf("JP HL");
+}
+
+void POP_16BitReq(cpu_t* cpu, uint16_t* reg, const char* regName)
+{
+	uint16_t value = PopWordFromStack(cpu);
+	*reg = value;
+	cpuInstance.currentIstructionCycles = 12;
+
+	printf("POP %s", regName);
+}
+
+void PUSH_16BitReq(cpu_t* cpu, uint16_t* reg, const char* regName)
+{
+	PushWordToStack(cpu, *reg);
+	cpuInstance.currentIstructionCycles = 16;
+	printf("PUSH %s", regName);
+}
 
 
+void ADD_16BitReg(cpu_t* cpu, uint16_t* destReg, uint16_t* sourceReg, const char* destRegName, const char* sourceRegName)
+{
+	uint16_t originalValue = (*destReg);
+	(*destReg) += (*sourceReg);
 
+	uint8_t hcarry = (((originalValue & 0xF) + (*sourceReg & 0xF)) & 0x10) == 0x10;
+	uint8_t carry = (originalValue > (*destReg));
+	setFlags((*destReg), 0, hcarry, carry);
+	cpuInstance.currentIstructionCycles = 8;
+
+	printf("ADD %s, %s", destRegName, sourceRegName);
+}
 
 void ADD_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 {
@@ -245,6 +278,13 @@ void DEC_16BitReg(cpu_t* cpu, uint16_t* reg, const char* regName)
 	printf("DEC %s", regName);
 }
 
+void INC_16BitReg(cpu_t* cpu, uint16_t* reg, const char* regName)
+{
+	(*reg)++;
+	cpu->currentIstructionCycles = 8;
+	printf("INC %s", regName);
+}
+
 void INC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 {
 	uint8_t originalValue = *reg;
@@ -341,6 +381,11 @@ void cpuStep() {
 			LD_WordTo16BitReg(&cpuInstance, &cpuInstance.bc, "BC");
 			break;
 		}
+		case 0x03:
+		{
+			INC_16BitReg(&cpuInstance, &cpuInstance.bc, "BC");
+			break;
+		}
 		case 0x05:
 		{
 			DEC_8BitReg(&cpuInstance, &cpuInstance.b, "B");
@@ -349,6 +394,11 @@ void cpuStep() {
 		case 0x06:
 		{
 			LD_ByteToReg(&cpuInstance, &cpuInstance.b, 'B');
+			break;
+		}
+		case 0x09:
+		{
+			ADD_16BitReg(&cpuInstance, &cpuInstance.hl, &cpuInstance.bc, "HL", "BC");
 			break;
 		}
 		case 0x0b:
@@ -376,9 +426,19 @@ void cpuStep() {
 			LD_WordTo16BitReg(&cpuInstance, &cpuInstance.de, "DE");
 			break;
 		}
+		case 0x13:
+		{
+			INC_16BitReg(&cpuInstance, &cpuInstance.de, "DE");
+			break;
+		}
 		case 0x16:
 		{
 			LD_ByteToReg(&cpuInstance, &cpuInstance.d, 'D');
+			break;
+		}
+		case 0x19:
+		{
+			ADD_16BitReg(&cpuInstance, &cpuInstance.hl, &cpuInstance.de, "HL", "DE");
 			break;
 		}
 		case 0x1b:
@@ -413,9 +473,19 @@ void cpuStep() {
 			LD_WordTo16BitReg(&cpuInstance, &cpuInstance.hl, "HL");
 			break;
 		}
+		case 0x23:
+		{
+			INC_16BitReg(&cpuInstance, &cpuInstance.hl, "HL");
+			break;
+		}
 		case 0x26:
 		{
 			LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'H');
+			break;
+		}
+		case 0x29:
+		{
+			ADD_16BitReg(&cpuInstance, &cpuInstance.hl, &cpuInstance.hl, "HL", "HL");
 			break;
 		}
 		case 0x2b:
@@ -452,9 +522,19 @@ void cpuStep() {
 			printf("LD (HL-),A");
 			break;
 		}
+		case 0x33:
+		{
+			INC_16BitReg(&cpuInstance, &cpuInstance.sp, "SP");
+			break;
+		}
 		case 0x36:
 		{
 			LD_ByteToAddress(&cpuInstance, cpuInstance.hl, "HL");
+			break;
+		}
+		case 0x39:
+		{
+			ADD_16BitReg(&cpuInstance, &cpuInstance.hl, &cpuInstance.sp, "HL", "SP");
 			break;
 		}
 		case 0x3b:
@@ -922,7 +1002,11 @@ void cpuStep() {
 			OR_8BitReg(&cpuInstance, &cpuInstance.a, "A");
 			break;
 		}
-
+		case 0xc1:
+		{
+			POP_16BitReq(&cpuInstance, &cpuInstance.bc, "BC");
+			break;
+		}
 	
 		case 0xc3:
 		{
@@ -933,6 +1017,11 @@ void cpuStep() {
 
 			cpuInstance.currentIstructionCycles = 16;
 			printf("jp %04X", address);
+			break;
+		}
+		case 0xc5:
+		{
+			PUSH_16BitReq(&cpuInstance, &cpuInstance.bc, "BC");
 			break;
 		}
 		case 0xc9:
@@ -982,6 +1071,16 @@ void cpuStep() {
 			Call(&cpuInstance);
 			break;
 		}
+		case 0xd1:
+		{
+			POP_16BitReq(&cpuInstance, &cpuInstance.de, "DE");
+			break;
+		}
+		case 0xd5:
+		{
+			PUSH_16BitReq(&cpuInstance, &cpuInstance.de, "DE");
+			break;
+		}
 		case 0xE0:
 		{
 			uint8_t addressOffset = readByteFromAddress(cpuInstance.pc);
@@ -993,9 +1092,19 @@ void cpuStep() {
 			printf("LDH ($FF00+%04X), A", addressOffset);
 			break;
 		}
+		case 0xe1:
+		{
+			POP_16BitReq(&cpuInstance, &cpuInstance.hl, "HL");
+			break;
+		}
 		case 0xE2:
 		{
 			LD_RegValueToRegAddressHigh(&cpuInstance, &cpuInstance.a, &cpuInstance.c, "A", "C");
+			break;
+		}
+		case 0xe5:
+		{
+			PUSH_16BitReq(&cpuInstance, &cpuInstance.hl, "HL");
 			break;
 		}
 		case 0xEa:
@@ -1013,6 +1122,11 @@ void cpuStep() {
 			AND_FromPC(&cpuInstance);
 			break;
 		}
+		case 0xE9:
+		{
+			Jump_HL(&cpuInstance);
+			break;
+		}
 		case 0xEf:
 		{
 			RST(&cpuInstance, 0x28);
@@ -1028,12 +1142,23 @@ void cpuStep() {
 			printf("LDH A,($FF00+%04X)", address);
 			break;
 		}
+		case 0xf1:
+		{
+			POP_16BitReq(&cpuInstance, &cpuInstance.af, "AF");
+			break;
+		}
 		case 0xf3:
 		{
 			printf("DI");
 			cpuInstance.currentIstructionCycles = 4;
 			break;
 		}
+		case 0xf5:
+		{
+			PUSH_16BitReq(&cpuInstance, &cpuInstance.af, "AF");
+			break;
+		}
+
 		case 0xfb:
 		{
 			printf("EI");
@@ -1063,7 +1188,7 @@ void cpuStep() {
 		default:
 		{
 			cpuInstance.currentIstructionCycles = 0;
-			printf("Unknown");
+ 			printf("Unknown");
 			break;
 		}
 	}
