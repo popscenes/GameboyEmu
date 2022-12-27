@@ -1,8 +1,17 @@
 #pragma once
 #include <stdint.h>
 typedef struct {
-	uint8_t a;
-	uint8_t f;
+	
+
+	struct {
+		union {
+			struct {
+				uint8_t a;
+				uint8_t f;
+			};
+			uint16_t af;
+		};
+	};
 	
 	struct {
 		union {
