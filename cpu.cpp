@@ -323,6 +323,16 @@ void AND_FromPC(cpu_t* cpu)
 	printf("AND d8 %02X", value);
 }
 
+void Rotate_A_RLCA(cpu_t* cpu)
+{	uint8_t origVal = cpu->a;
+	uint8_t value = (origVal << 1) | (origVal >> 7);
+	uint8_t carry = (origVal >> 7);
+	setFlags(value, 0, 0, carry);
+	cpu->a = value;
+	cpu->currentIstructionCycles = 4;
+	printf("RLCA");
+}
+
 void Ret(cpu_t* cpu)
 {
 	uint16_t address = PopWordFromStack(cpu);
@@ -394,6 +404,11 @@ void cpuStep() {
 		case 0x06:
 		{
 			LD_ByteToReg(&cpuInstance, &cpuInstance.b, 'B');
+			break;
+		}
+		case 0x07:
+		{
+			Rotate_A_RLCA(&cpuInstance);
 			break;
 		}
 		case 0x09:
