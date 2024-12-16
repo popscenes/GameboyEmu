@@ -197,6 +197,25 @@ void RST(cpu_t* cpu, uint8_t jumpParam)
 	printf("RST %x02", jumpParam);
 }
 
+void LD_RegTo16BitRegAddress(cpu_t* cpu, uint16_t addressReg, uint8_t regSource, const char* addressRegName, const char* regSourceName)
+{
+	writeByteToAddress(addressReg, regSource);
+	cpuInstance.currentIstructionCycles = 8;
+	printf("LD %s, %s", addressRegName, regSourceName);
+
+}
+
+
+void LD_16BitRegAddressToReg(cpu_t* cpu, uint8_t *regDest, uint16_t addressReg, const char* regDestName, const char* addressRegName)
+{
+	uint16_t value = readByteFromAddress(addressReg);
+	*regDest = value;
+	cpuInstance.currentIstructionCycles = 8;
+	printf("LD %s, %s", regDestName, addressRegName);
+
+}
+
+
 void LD_8bitRegTo8BitReg(cpu_t* cpu, uint8_t* regDest, uint8_t* regSource, const char* regDestName, const char* regSourceName)
 {
 	(*regDest) = (*regSource);
@@ -293,7 +312,7 @@ void INC_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
 	uint8_t hcarry = (((originalValue & 0xF) + (*reg & 0xF)) & 0x10) == 0x10;
 	cpu->currentIstructionCycles = 4;
 	setFlags(*reg, 0, hcarry, 0);
-	printf("DEC %s", regName);
+	printf("INC %s", regName);
 }
 
 void AND_8BitReg(cpu_t* cpu, uint8_t* reg, const char* regName)
@@ -391,9 +410,19 @@ void cpuStep() {
 			LD_WordTo16BitReg(&cpuInstance, &cpuInstance.bc, "BC");
 			break;
 		}
+		case 0x02:
+		{
+			LD_RegTo16BitRegAddress(&cpuInstance, cpuInstance.bc, cpuInstance.a, "BC", "A");
+			break;
+		}
 		case 0x03:
 		{
 			INC_16BitReg(&cpuInstance, &cpuInstance.bc, "BC");
+			break;
+		}
+		case 0x04:
+		{
+			INC_8BitReg(&cpuInstance, &cpuInstance.b, "B");
 			break;
 		}
 		case 0x05:
@@ -414,6 +443,16 @@ void cpuStep() {
 		case 0x09:
 		{
 			ADD_16BitReg(&cpuInstance, &cpuInstance.hl, &cpuInstance.bc, "HL", "BC");
+			break;
+		}
+		case 0x12:
+		{
+			LD_RegTo16BitRegAddress(&cpuInstance, cpuInstance.de, cpuInstance.a, "DE", "A");
+			break;
+		}
+		case 0x0a:
+		{
+			LD_16BitRegAddressToReg(&cpuInstance, &cpuInstance.a, cpuInstance.bc, "A", "BC");
 			break;
 		}
 		case 0x0b:
@@ -446,6 +485,11 @@ void cpuStep() {
 			INC_16BitReg(&cpuInstance, &cpuInstance.de, "DE");
 			break;
 		}
+		case 0x14:
+		{
+			INC_8BitReg(&cpuInstance, &cpuInstance.d, "D");
+			break;
+		}
 		case 0x16:
 		{
 			LD_ByteToReg(&cpuInstance, &cpuInstance.d, 'D');
@@ -456,9 +500,19 @@ void cpuStep() {
 			ADD_16BitReg(&cpuInstance, &cpuInstance.hl, &cpuInstance.de, "HL", "DE");
 			break;
 		}
+		case 0x1a:
+		{
+			LD_16BitRegAddressToReg(&cpuInstance, &cpuInstance.a, cpuInstance.de, "A", "DE");
+			break;
+		}
 		case 0x1b:
 		{
 			DEC_16BitReg(&cpuInstance, &cpuInstance.de, "DE");
+			break;
+		}
+		case 0x1c:
+		{
+			INC_8BitReg(&cpuInstance, &cpuInstance.e, "E");
 			break;
 		}
 		case 0x1e:
@@ -493,6 +547,11 @@ void cpuStep() {
 			INC_16BitReg(&cpuInstance, &cpuInstance.hl, "HL");
 			break;
 		}
+		case 0x24:
+		{
+			INC_8BitReg(&cpuInstance, &cpuInstance.h, "H");
+			break;
+		}
 		case 0x26:
 		{
 			LD_ByteToReg(&cpuInstance, &cpuInstance.h, 'H');
@@ -511,6 +570,11 @@ void cpuStep() {
 		case 0x2a:
 		{
 			LD_ByteAtHLAddressToRegWithInc(&cpuInstance, &cpuInstance.a, "A");
+			break;
+		}
+		case 0x2c:
+		{
+			INC_8BitReg(&cpuInstance, &cpuInstance.l, "L");
 			break;
 		}
 		case 0x2e:
@@ -555,6 +619,11 @@ void cpuStep() {
 		case 0x3b:
 		{
 			DEC_16BitReg(&cpuInstance, &cpuInstance.sp, "SP");
+			break;
+		}
+		case 0x3c:
+		{
+			INC_8BitReg(&cpuInstance, &cpuInstance.a, "A");
 			break;
 		}
 		case 0x3E:
@@ -821,7 +890,11 @@ void cpuStep() {
 		}
 
 
-
+		case 0x77:
+		{
+			LD_RegTo16BitRegAddress(&cpuInstance, cpuInstance.hl, cpuInstance.a, "HL", "A");
+			break;
+		}
 		case 0x78:
 		{
 			LD_8bitRegTo8BitReg(&cpuInstance, &cpuInstance.a, &cpuInstance.b, "A", "B");
