@@ -7,12 +7,13 @@ int loadCart(char* filename)
 	
 	long cartSize = 0;
 	FILE* cartFile;
-	errno_t fopenresult = fopen_s(&cartFile, filename, "r");
-	if (fopenresult != 0)
+	errno_t fopenresult = fopen_s(&cartFile, filename, "rb");
+	if (fopenresult != 0 || cartFile == NULL)
 	{
 		printf("error opening %s file result %d", filename, fopenresult);
+		return 1;
 	}
-	
+
 	fseek(cartFile, 0L, SEEK_END);
 	cartSize = ftell(cartFile);
 	rewind(cartFile);
