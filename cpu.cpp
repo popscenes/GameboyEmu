@@ -2225,6 +2225,7 @@ void cpuStep() {
 	}
 
 	cpuInstance.totalCycles += cpuInstance.currentIstructionCycles;
+	timerStep(cpuInstance.currentIstructionCycles);
 
 	printf("\tA:%02X B:%02X C:%02X D:%02X E:%02X F:%02X HL:%04X SP:%04X\n", cpuInstance.a, cpuInstance.b, cpuInstance.c, cpuInstance.d, cpuInstance.e, cpuInstance.f, cpuInstance.hl, cpuInstance.sp);
 
