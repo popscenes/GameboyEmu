@@ -18,3 +18,5 @@ typedef struct gameboy_s {
 	screen_t screen;
 	cart_t cart;
 } gameboy_t;
+
+void gameboyStep(gameboy_t* gb);

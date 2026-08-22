@@ -148,6 +148,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="screen.cpp" />
+    <ClCompile Include="gameboy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bus.h" />

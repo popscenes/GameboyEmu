@@ -2354,8 +2354,6 @@ void cpuStep(gameboy_t* gb) {
 	}
 
 	cpuInstance.totalCycles += cpuInstance.currentIstructionCycles;
-	timerStep(&gb->timer, &gb->hardwareRegisters, cpuInstance.currentIstructionCycles);
-	HandleInterrupts(gb);
 
 	printf("\tA:%02X B:%02X C:%02X D:%02X E:%02X F:%02X HL:%04X SP:%04X\n", cpuInstance.a, cpuInstance.b, cpuInstance.c, cpuInstance.d, cpuInstance.e, cpuInstance.f, cpuInstance.hl, cpuInstance.sp);
 
