@@ -146,12 +146,16 @@
     <ClCompile Include="Cart.cpp" />
     <ClCompile Include="cpu.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="timer.cpp" />
+    <ClCompile Include="screen.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bus.h" />
     <ClInclude Include="Cart.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="GameBoy.h" />
+    <ClInclude Include="timer.h" />
+    <ClInclude Include="screen.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="C:\Users\Anthony Borg\Downloads\GBCPUman.pdf" />
