@@ -65,5 +65,6 @@ typedef struct gameboy_s gameboy_t;
 
 void cpuInit(gameboy_t* gb);
 void cpuStep(gameboy_t* gb);
+void HandleInterrupts(gameboy_t* gb);
 
 uint8_t cpuCurrentIstructionCycles(gameboy_t* gb);

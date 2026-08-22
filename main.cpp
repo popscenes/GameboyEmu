@@ -74,7 +74,7 @@ int main(int argc, char* args[])
 
 		QueryPerformanceCounter(&StartingTime);
 
-		cpuStep(&gb);
+		gameboyStep(&gb);
 		QueryPerformanceCounter(&EndingTime);
 		ElapsedNanoseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
 
