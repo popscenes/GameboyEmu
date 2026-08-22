@@ -31,8 +31,8 @@ typedef struct {
 	uint8_t* romData;
 } cart_t;
 
-int loadCart(char* filename);
-uint8_t readyByteFromCart(uint16_t address);
+int loadCart(cart_t* cart, char* filename);
+uint8_t readyByteFromCart(cart_t* cart, uint16_t address);
 
 	
 

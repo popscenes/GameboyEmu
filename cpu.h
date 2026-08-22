@@ -44,7 +44,9 @@ typedef struct {
 	};
 	uint16_t sp;
 	uint16_t pc;
-	
+
+	uint8_t ime;
+
 	uint8_t currentIstructionOpCode;
 	uint8_t currentIstructionCBOpCode;
 	uint8_t currentIstructionCycles;
@@ -59,7 +61,9 @@ typedef struct {
 #define FLAG_HALF_CARRY 0b00100000
 #define FLAG_CARRY 0b00010000
 
-void cpuInit();
-void cpuStep();
+typedef struct gameboy_s gameboy_t;
 
-uint8_t cpuCurrentIstructionCycles();
+void cpuInit(gameboy_t* gb);
+void cpuStep(gameboy_t* gb);
+
+uint8_t cpuCurrentIstructionCycles(gameboy_t* gb);

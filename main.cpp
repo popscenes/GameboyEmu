@@ -59,26 +59,29 @@ int main(int argc, char* args[])
 	{
 		return 0;
 	}
-	loadCart(args[1]);
-	cpuInit();
-	
+
+	gameboy_t gb = { 0 };
+
+	loadCart(&gb.cart, args[1]);
+	cpuInit(&gb);
+
 	QueryPerformanceFrequency(&Frequency);
 
-	
+
 
 	while (true)
 	{
-		
+
 		QueryPerformanceCounter(&StartingTime);
 
-		cpuStep();
+		cpuStep(&gb);
 		QueryPerformanceCounter(&EndingTime);
 		ElapsedNanoseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
 
 		ElapsedNanoseconds.QuadPart *= 1000000000;
 		ElapsedNanoseconds.QuadPart /= Frequency.QuadPart;
 
-		uint64_t nanoSecsforInst = (uint64_t)cpuCurrentIstructionCycles() * NANOSECONDS_PER_TICK;
+		uint64_t nanoSecsforInst = (uint64_t)cpuCurrentIstructionCycles(&gb) * NANOSECONDS_PER_TICK;
 		if (nanoSecsforInst < ElapsedNanoseconds.QuadPart)
 		{
 			
