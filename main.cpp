@@ -5,50 +5,38 @@
 #include "GameBoy.h"
 #include <Windows.h>
 #include <queue>
+
+#include "SDL_GameboyRenderer.h"
+
 using namespace std;
 
+bool isRunning;
 
-#define        THRD_MESSAGE_SOMEWORK        WM_USER + 1
-#define        THRD_MESSAGE_EXIT            WM_USER + 2
-
-DWORD WINAPI ThrdFunc(LPVOID n)
+void ProcessEvents()
 {
-	int        TNumber = (int)n;
-	while (1)
+	SDL_Event event;
+	while (SDL_PollEvent(&event))
 	{
-		MSG    msg;
-
-		BOOL    MsgReturn = GetMessage(&msg, NULL,
-			THRD_MESSAGE_SOMEWORK, THRD_MESSAGE_EXIT);
-
-		if (MsgReturn)
+		switch (event.type)
 		{
-			switch (msg.message)
+		case SDL_QUIT:
+			isRunning = false;
+			break;
+		case SDL_KEYDOWN:
+			if (event.key.keysym.sym == SDLK_ESCAPE)
 			{
-			case THRD_MESSAGE_SOMEWORK:
-				printf("Working Message.... for Thread Number\n");
-				break;
-			case THRD_MESSAGE_EXIT:
-				printf("Exit Message.... for Thread Number\n");
-				return 0;
+				isRunning = false;
 			}
+			break;
+		default:
+			break;
 		}
 	}
-	return 0;
 }
+
 
 int main(int argc, char* args[])
 {
-	
-
-	HANDLE        hThrd;
-	DWORD        Id;
-
-	queue<int> gquiz;
-
-	hThrd = CreateThread(NULL, 0,
-		(LPTHREAD_START_ROUTINE)ThrdFunc,
-		(LPVOID)0, 0, &Id);
 
 	LARGE_INTEGER StartingTime, EndingTime, ElapsedNanoseconds;
 	LARGE_INTEGER Frequency;
@@ -60,6 +48,13 @@ int main(int argc, char* args[])
 		return 0;
 	}
 
+	SDl_GameBoyRenderer_t renderer;
+	if(!GameBoyRendererInit(&renderer))
+	{
+		sprintf_s(buffer, "GameBoyRendererInit failed");
+		return 0;
+	}
+
 	gameboy_t gb = { 0 };
 
 	loadCart(&gb.cart, args[1]);
@@ -67,12 +62,15 @@ int main(int argc, char* args[])
 
 	QueryPerformanceFrequency(&Frequency);
 
+	isRunning = true;
 
 
-	while (true)
+
+	while (isRunning)
 	{
-
+		
 		QueryPerformanceCounter(&StartingTime);
+		ProcessEvents();
 
 		gameboyStep(&gb);
 		QueryPerformanceCounter(&EndingTime);
@@ -93,14 +91,6 @@ int main(int argc, char* args[])
 			
 			sprintf_s(buffer, "nanoSecsforInst: %lld under elapsed time:  %lld\n", nanoSecsforInst, ElapsedNanoseconds.QuadPart);
 			OutputDebugStringA(buffer);
-			//while (ElapsedNanoseconds.QuadPart < nanoSecsforInst)
-			//{
-			//	QueryPerformanceCounter(&EndingTime);
-			//	ElapsedNanoseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
-
-			//	ElapsedNanoseconds.QuadPart *= 1000000000;
-			//	ElapsedNanoseconds.QuadPart /= Frequency.QuadPart;
-			//}
 		}
 	}
 
