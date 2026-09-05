@@ -26,7 +26,7 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	{
 		byte = readyByteFromCart(&gb->cart, adderss);
 	}
-	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS)
+	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP)
 	{
 		return screenReadByte(&gb->screen, adderss);
 	}
@@ -75,7 +75,7 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	if (adderss <= CART_END_ADDRESS)
 	{
 	}
-	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS)
+	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP)
 	{
 		screenWriteByte(&gb->screen, adderss, value);
 	}

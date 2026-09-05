@@ -55,6 +55,17 @@ int main(int argc, char* args[])
 		return 0;
 	}
 
+	// TEMP: test pattern to prove the texture pipeline works, before real tile decoding replaces this in step 2
+	for (int y = 0; y < GB_SCREEN_HEIGHT; y++)
+	{
+		for (int x = 0; x < GB_SCREEN_WIDTH; x++)
+		{
+			uint8_t r = (uint8_t)(x * 255 / GB_SCREEN_WIDTH);
+			uint8_t g = (uint8_t)(y * 255 / GB_SCREEN_HEIGHT);
+			renderer.framebuffer[y * GB_SCREEN_WIDTH + x] = (0xFFu << 24) | (r << 16) | (g << 8) | 0;
+		}
+	}
+
 	gameboy_t gb = { 0 };
 
 	loadCart(&gb.cart, args[1]);
@@ -73,6 +84,7 @@ int main(int argc, char* args[])
 		ProcessEvents();
 
 		gameboyStep(&gb);
+		GameBoyRendererPresent(&renderer);
 		QueryPerformanceCounter(&EndingTime);
 		ElapsedNanoseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
 
@@ -93,6 +105,8 @@ int main(int argc, char* args[])
 			OutputDebugStringA(buffer);
 		}
 	}
+
+	GameBoyRendererShutdown(&renderer);
 
 	printf("press enter to exit\n");
 	scanf_s("19%s", str1, (unsigned)_countof(str1));

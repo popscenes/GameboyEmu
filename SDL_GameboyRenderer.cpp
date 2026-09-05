@@ -22,5 +22,29 @@ bool GameBoyRendererInit(SDl_GameBoyRenderer_t* renderer)
 		return false;
 	}
 
+	renderer->texture = SDL_CreateTexture(renderer->renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, GB_SCREEN_WIDTH, GB_SCREEN_HEIGHT);
+	if (!renderer->texture)
+	{
+		SDL_Log("SDL_CreateTexture failed: %s", SDL_GetError());
+		return false;
+	}
+
 	return true;
+}
+
+void GameBoyRendererPresent(SDl_GameBoyRenderer_t* renderer)
+{
+	SDL_UpdateTexture(renderer->texture, NULL, renderer->framebuffer, GB_SCREEN_WIDTH * sizeof(uint32_t));
+
+	SDL_RenderClear(renderer->renderer);
+	SDL_RenderCopy(renderer->renderer, renderer->texture, NULL, NULL);
+	SDL_RenderPresent(renderer->renderer);
+}
+
+void GameBoyRendererShutdown(SDl_GameBoyRenderer_t* renderer)
+{
+	SDL_DestroyTexture(renderer->texture);
+	SDL_DestroyRenderer(renderer->renderer);
+	SDL_DestroyWindow(renderer->window);
+	SDL_Quit();
 }
