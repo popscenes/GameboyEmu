@@ -85,6 +85,17 @@ void screenRenderBackground(screen_t* screen, uint32_t* framebuffer)
 					uint8_t pixelLowBit = (lowByte >> (7 - tileXPos)) & 1;
 					uint8_t pixelHighbit = (highByte >> (7 - tileXPos)) & 1;
 					uint8_t colorID = (pixelHighbit << 1) | pixelLowBit;
+
+					uint8_t shade = (screen->bgp >> (colorID * 2)) & 0x3;
+					uint8_t gray = (255 - ((shade * 255) / 3));
+					uint32_t pixelColour = 0xFF000000 | (gray << 16) | (gray << 8) | gray;
+
+					uint32_t screenXPos = (currentCol * GB_TILE_COLS) + tileXPos;
+					uint32_t screenYPos = (currentRow * GB_TILE_ROWS) + tileYPos;
+
+					framebuffer[(screenYPos * GB_SCREEN_WIDTH) + screenXPos] = pixelColour;
+
+
 				}
 			}
 		}

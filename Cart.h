@@ -29,10 +29,12 @@ rom_header_t;
 typedef struct {
 	rom_header_t* header;
 	uint8_t* romData;
+	uint8_t romBank;
 } cart_t;
 
 int loadCart(cart_t* cart, char* filename);
 uint8_t readyByteFromCart(cart_t* cart, uint16_t address);
+void writeByteToCart(cart_t* cart, uint16_t address, uint8_t value);
 
 	
 
