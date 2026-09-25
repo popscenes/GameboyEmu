@@ -22,6 +22,8 @@ int loadCart(cart_t* cart, char* filename)
 
 	fclose(cartFile);
 
+	cart->romBank = 1;
+
 	cart->header = (rom_header_t*)(cart->romData + 0x100);
 
 	printf("Cartridge Loaded:\n");
@@ -33,5 +35,34 @@ int loadCart(cart_t* cart, char* filename)
 
 uint8_t readyByteFromCart(cart_t* cart, uint16_t address)
 {
-	return cart->romData[address];
+	if (address < 0x4000)
+	{
+		return cart->romData[address];
+	}
+
+	uint32_t bankAddress = ((cart->romBank-1) * 0x4000) + address;
+
+	return cart->romData[bankAddress];
+}
+
+void writeByteToCart(cart_t* cart, uint16_t address, uint8_t value)
+{
+	if (address < 0x2000 || address > 0x3FFF)
+	{
+		return;
+	}
+
+	value = value & 0x1F;
+
+
+	if (value == 0)
+	{
+		value = 1;
+	}
+
+	uint8_t maxBanks = 2 << cart->header->romSize;
+	value = value & (maxBanks - 1);
+
+	cart->romBank = value & 0x1F;
+
 }

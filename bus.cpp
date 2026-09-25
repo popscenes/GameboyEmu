@@ -34,6 +34,11 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	{
 		return timerReadByte(&gb->timer, adderss);
 	}
+	else if (adderss == IO_REG_JOYPAD)
+	{
+		// Buttons are active-low; report nothing pressed until real input exists.
+		return 0xFF;
+	}
 	else if (adderss == IO_REG_INTERRUPT_FLAG)
 	{
 		return gb->hardwareRegisters.interruptFlag;
@@ -74,6 +79,7 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	uint8_t byte = 0;
 	if (adderss <= CART_END_ADDRESS)
 	{
+		writeByteToCart(&gb->cart, adderss, value);
 	}
 	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP)
 	{
@@ -88,6 +94,9 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	else if (adderss >= IO_REG_DIV && adderss <= IO_REG_TAC)
 	{
 		timerWriteByte(&gb->timer, adderss, value);
+	}
+	else if (adderss == IO_REG_JOYPAD)
+	{
 	}
 	else if (adderss == IO_REG_INTERRUPT_FLAG)
 	{
