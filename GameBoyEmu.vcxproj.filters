@@ -62,6 +62,9 @@
     <ClInclude Include="SDL_GameboyRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="C:\Users\Anthony Borg\Downloads\GBCPUman.pdf" />

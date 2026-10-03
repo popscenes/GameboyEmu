@@ -161,6 +161,7 @@
     <ClInclude Include="bus.h" />
     <ClInclude Include="Cart.h" />
     <ClInclude Include="cpu.h" />
+    <ClInclude Include="debug.h" />
     <ClInclude Include="GameBoy.h" />
     <ClInclude Include="SDL_GameboyRenderer.h" />
     <ClInclude Include="timer.h" />

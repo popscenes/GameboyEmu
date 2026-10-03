@@ -2,6 +2,7 @@
 #include "bus.h"
 #include "timer.h"
 #include "GameBoy.h"
+#include "debug.h"
 #include <stdio.h>
 #include <windows.h>
 
@@ -95,7 +96,7 @@ void Jump_HL(gameboy_t* gb)
 	cpu_t* cpu = &gb->cpu;
 	cpu->pc = cpu->hl;
 	cpu->currentIstructionCycles = 4;
-	printf("JP HL");
+	TRACE("JP HL");
 }
 
 void POP_16BitReq(gameboy_t* gb, uint16_t* reg, const char* regName)
@@ -105,7 +106,7 @@ void POP_16BitReq(gameboy_t* gb, uint16_t* reg, const char* regName)
 	*reg = value;
 	cpu->currentIstructionCycles = 12;
 
-	printf("POP %s", regName);
+	TRACE("POP %s", regName);
 }
 
 void PUSH_16BitReq(gameboy_t* gb, uint16_t* reg, const char* regName)
@@ -113,7 +114,7 @@ void PUSH_16BitReq(gameboy_t* gb, uint16_t* reg, const char* regName)
 	cpu_t* cpu = &gb->cpu;
 	PushWordToStack(gb, *reg);
 	cpu->currentIstructionCycles = 16;
-	printf("PUSH %s", regName);
+	TRACE("PUSH %s", regName);
 }
 
 
@@ -129,7 +130,7 @@ void ADD_16BitReg(gameboy_t* gb, uint16_t* destReg, uint16_t* sourceReg, const c
 	setFlags(gb, (*destReg), 0, hcarry, carry);
 	cpu->currentIstructionCycles = 8;
 
-	printf("ADD %s, %s", destRegName, sourceRegName);
+	TRACE("ADD %s, %s", destRegName, sourceRegName);
 }
 
 void ADD_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -142,7 +143,7 @@ void ADD_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	uint8_t carry = (originalValue > cpu->a);
 
 	setFlags(gb, cpu->a, 0, hcarry, carry);
-	printf("ADD %s", regName);
+	TRACE("ADD %s", regName);
 }
 
 void OR_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -151,7 +152,7 @@ void OR_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	cpu->a = cpu->a | *reg;
 	cpu->currentIstructionCycles = 4;
 	setFlags(gb, cpu->a, 0, 0, 0);
-	printf("OR %s", regName);
+	TRACE("OR %s", regName);
 
 }
 
@@ -163,7 +164,7 @@ void OR_PCAddress(gameboy_t* gb)
 	cpu->a = cpu->a | value;
 	cpu->currentIstructionCycles = 8;
 	setFlags(gb, cpu->a, 0, 0, 0);
-	printf("OR #%02x", value);
+	TRACE("OR #%02x", value);
 
 }
 
@@ -174,7 +175,7 @@ void OR_HLAddress(gameboy_t* gb)
 	cpu->a = cpu->a | value;
 	cpu->currentIstructionCycles = 8;
 	setFlags(gb, cpu->a, 0, 0, 0);
-	printf("OR (HL)");
+	TRACE("OR (HL)");
 
 }
 
@@ -185,7 +186,7 @@ void XOR_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	cpu->a = cpu->a ^ *reg;
 	setFlags(gb, cpu->a, 0, 0, 0);
 	cpu->currentIstructionCycles = 4;
-	printf("XOR %s", regName);
+	TRACE("XOR %s", regName);
 
 }
 
@@ -202,7 +203,7 @@ void SWAP_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 
 	cpu->currentIstructionCycles = 8;
 	setFlags(gb, *reg, 0, 0, 0);
-	printf("swap %s", regName);
+	TRACE("swap %s", regName);
 
 }
 
@@ -213,7 +214,7 @@ void RST(gameboy_t* gb, uint8_t jumpParam)
 	
 	cpu->pc = jumpParam;
 	cpu->currentIstructionCycles = 16;
-	printf("RST %x02", jumpParam);
+	TRACE("RST %x02", jumpParam);
 }
 
 void LD_RegTo16BitRegAddress(gameboy_t* gb, uint16_t addressReg, uint8_t regSource, const char* addressRegName, const char* regSourceName)
@@ -221,7 +222,7 @@ void LD_RegTo16BitRegAddress(gameboy_t* gb, uint16_t addressReg, uint8_t regSour
 	cpu_t* cpu = &gb->cpu;
 	writeByteToAddress(gb, addressReg, regSource);
 	cpu->currentIstructionCycles = 8;
-	printf("LD %s, %s", addressRegName, regSourceName);
+	TRACE("LD %s, %s", addressRegName, regSourceName);
 
 }
 
@@ -232,7 +233,7 @@ void LD_16BitRegAddressToReg(gameboy_t* gb, uint8_t *regDest, uint16_t addressRe
 	uint16_t value = readByteFromAddress(gb, addressReg);
 	*regDest = value;
 	cpu->currentIstructionCycles = 8;
-	printf("LD %s, %s", regDestName, addressRegName);
+	TRACE("LD %s, %s", regDestName, addressRegName);
 
 }
 
@@ -242,7 +243,7 @@ void LD_8bitRegTo8BitReg(gameboy_t* gb, uint8_t* regDest, uint8_t* regSource, co
 	cpu_t* cpu = &gb->cpu;
 	(*regDest) = (*regSource);
 	cpu->currentIstructionCycles = 4;
-	printf("LD %s, %s", regDestName, regSourceName);
+	TRACE("LD %s, %s", regDestName, regSourceName);
 }
 
 void LD_RegValueToRegAddressHigh(gameboy_t* gb, uint8_t* regVal, uint8_t* regAddress, const char* regValName, const char* regAddressName)
@@ -250,7 +251,7 @@ void LD_RegValueToRegAddressHigh(gameboy_t* gb, uint8_t* regVal, uint8_t* regAdd
 	cpu_t* cpu = &gb->cpu;
 	writeByteToAddress(gb, (*regAddress + 0xff00), *regVal);
 	cpu->currentIstructionCycles = 8;
-	printf("LD (FF00+%s), %s", regAddressName, regValName);
+	TRACE("LD (FF00+%s), %s", regAddressName, regValName);
 }
 
 void LD_ByteAtHLAddressToReg(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -259,7 +260,7 @@ void LD_ByteAtHLAddressToReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	uint8_t loByte = readByteFromAddress(gb, cpu->hl);
 	*reg = loByte;
 	cpu->currentIstructionCycles = 8;
-	printf("LD %s, (HL+)", regName);
+	TRACE("LD %s, (HL+)", regName);
 }
 
 void LD_ByteAtHLAddressToRegWithInc(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -269,7 +270,7 @@ void LD_ByteAtHLAddressToRegWithInc(gameboy_t* gb, uint8_t* reg, const char* reg
 	*reg = loByte;
 	cpu->hl++;
 	cpu->currentIstructionCycles = 8;
-	printf("LD %s, (HL+)", regName);
+	TRACE("LD %s, (HL+)", regName);
 }
 
 void LD_ByteToAddress(gameboy_t* gb, uint16_t address, const char* regName)
@@ -280,7 +281,7 @@ void LD_ByteToAddress(gameboy_t* gb, uint16_t address, const char* regName)
 	cpu->currentIstructionCycles = 12;
 	cpu->pc++;
 
-	printf("LD (%s),%02X", regName, loByte);
+	TRACE("LD (%s),%02X", regName, loByte);
 }
 
 void LD_ByteToReg(gameboy_t* gb, uint8_t* reg, char regName)
@@ -292,7 +293,7 @@ void LD_ByteToReg(gameboy_t* gb, uint8_t* reg, char regName)
 	cpu->currentIstructionCycles = 8;
 	*reg = loByte;
 	
-	printf("LD %c,%02X", regName, loByte);
+	TRACE("LD %c,%02X", regName, loByte);
 	
 }
 
@@ -304,7 +305,7 @@ void LD_WordTo16BitReg(gameboy_t* gb, uint16_t* reg, const char* regName)
 	*reg = word;
 	cpu->currentIstructionCycles = 12;
 
-	printf("LD %s, %04X", regName, word);
+	TRACE("LD %s, %04X", regName, word);
 }
 
 void DEC_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -316,7 +317,7 @@ void DEC_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	uint8_t hcarry = (((originalValue & 0xF) - (*reg & 0xF)) & 0x10) == 0x10;
 	cpu->currentIstructionCycles = 4;
 	setFlags(gb, *reg, 1, hcarry, isFlagSet(gb, FLAG_CARRY));
-	printf("DEC %s", regName);
+	TRACE("DEC %s", regName);
 }
 
 void DEC_16BitReg(gameboy_t* gb, uint16_t* reg, const char* regName)
@@ -324,7 +325,7 @@ void DEC_16BitReg(gameboy_t* gb, uint16_t* reg, const char* regName)
 	cpu_t* cpu = &gb->cpu;
 	(*reg)--;
 	cpu->currentIstructionCycles = 8;
-	printf("DEC %s", regName);
+	TRACE("DEC %s", regName);
 }
 
 void INC_16BitReg(gameboy_t* gb, uint16_t* reg, const char* regName)
@@ -332,7 +333,7 @@ void INC_16BitReg(gameboy_t* gb, uint16_t* reg, const char* regName)
 	cpu_t* cpu = &gb->cpu;
 	(*reg)++;
 	cpu->currentIstructionCycles = 8;
-	printf("INC %s", regName);
+	TRACE("INC %s", regName);
 }
 
 void INC_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -344,7 +345,7 @@ void INC_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	uint8_t hcarry = (((originalValue & 0xF) + (*reg & 0xF)) & 0x10) == 0x10;
 	cpu->currentIstructionCycles = 4;
 	setFlags(gb, *reg, 0, hcarry, isFlagSet(gb, FLAG_CARRY));
-	printf("INC %s", regName);
+	TRACE("INC %s", regName);
 }
 
 void AND_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
@@ -353,7 +354,7 @@ void AND_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 	cpu->a = cpu->a & *reg;
 	setFlags(gb, cpu->a, 0, 1, 0);
 	cpu->currentIstructionCycles = 4;
-	printf("AND %s", regName);
+	TRACE("AND %s", regName);
 }
 
 void AND_FromHL(gameboy_t* gb)
@@ -363,7 +364,7 @@ void AND_FromHL(gameboy_t* gb)
 	cpu->a = cpu->a & value;
 	setFlags(gb, cpu->a, 0, 1, 0);
 	cpu->currentIstructionCycles = 8;
-	printf("AND d8 %02X", value);
+	TRACE("AND d8 %02X", value);
 }
 
 void AND_FromPC(gameboy_t* gb)
@@ -374,7 +375,7 @@ void AND_FromPC(gameboy_t* gb)
 	cpu->a = cpu->a & value;
 	setFlags(gb, cpu->a, 0, 1, 0);
 	cpu->currentIstructionCycles = 8;
-	printf("AND d8 %02X", value);
+	TRACE("AND d8 %02X", value);
 }
 
 void Rotate_A_RLCA(gameboy_t* gb)
@@ -386,7 +387,7 @@ void Rotate_A_RLCA(gameboy_t* gb)
 	cpu->f = carry ? FLAG_CARRY : 0;
 	cpu->a = value;
 	cpu->currentIstructionCycles = 4;
-	printf("RLCA");
+	TRACE("RLCA");
 }
 
 void Ret(gameboy_t* gb)
@@ -395,7 +396,7 @@ void Ret(gameboy_t* gb)
 	uint16_t address = PopWordFromStack(gb);
 	cpu->currentIstructionCycles = 16;
 	cpu->pc = address;
-	printf("RET");
+	TRACE("RET");
 }
 
 void Call(gameboy_t* gb)
@@ -406,7 +407,7 @@ void Call(gameboy_t* gb)
 	PushWordToStack(gb, addressToPush);
 	cpu->pc = addressToJump;
 	cpu->currentIstructionCycles = 24;
-	printf("CALL %0x4", addressToJump);
+	TRACE("CALL %0x4", addressToJump);
 }
 
 void CPL(gameboy_t* gb)
@@ -416,7 +417,7 @@ void CPL(gameboy_t* gb)
 	cpu->currentIstructionCycles = 4;
 	setFlag(gb, FLAG_SUBTRACT);
 	setFlag(gb, FLAG_HALF_CARRY);
-	printf("CPL");
+	TRACE("CPL");
 }
 
 void ADD_FromHL(gameboy_t* gb)
@@ -429,7 +430,7 @@ void ADD_FromHL(gameboy_t* gb)
 	uint8_t carry = (originalValue > cpu->a);
 	setFlags(gb, cpu->a, 0, hcarry, carry);
 	cpu->currentIstructionCycles = 8;
-	printf("ADD A,(HL)");
+	TRACE("ADD A,(HL)");
 }
 
 void ADD_FromPC(gameboy_t* gb)
@@ -443,7 +444,7 @@ void ADD_FromPC(gameboy_t* gb)
 	uint8_t carry = (originalValue > cpu->a);
 	setFlags(gb, cpu->a, 0, hcarry, carry);
 	cpu->currentIstructionCycles = 8;
-	printf("ADD A,%02X", value);
+	TRACE("ADD A,%02X", value);
 }
 
 void ADC_Value(gameboy_t* gb, uint8_t value)
@@ -463,7 +464,7 @@ void ADC_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 {
 	cpu_t* cpu = &gb->cpu;
 	ADC_Value(gb, *reg);
-	printf("ADC A,%s", regName);
+	TRACE("ADC A,%s", regName);
 }
 
 void ADC_FromHL(gameboy_t* gb)
@@ -472,7 +473,7 @@ void ADC_FromHL(gameboy_t* gb)
 	uint8_t value = readByteFromAddress(gb, cpu->hl);
 	ADC_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("ADC A,(HL)");
+	TRACE("ADC A,(HL)");
 }
 
 void ADC_FromPC(gameboy_t* gb)
@@ -482,7 +483,7 @@ void ADC_FromPC(gameboy_t* gb)
 	cpu->pc++;
 	ADC_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("ADC A,%02X", value);
+	TRACE("ADC A,%02X", value);
 }
 
 void SUB_Value(gameboy_t* gb, uint8_t value)
@@ -500,7 +501,7 @@ void SUB_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 {
 	cpu_t* cpu = &gb->cpu;
 	SUB_Value(gb, *reg);
-	printf("SUB %s", regName);
+	TRACE("SUB %s", regName);
 }
 
 void SUB_FromHL(gameboy_t* gb)
@@ -509,7 +510,7 @@ void SUB_FromHL(gameboy_t* gb)
 	uint8_t value = readByteFromAddress(gb, cpu->hl);
 	SUB_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("SUB (HL)");
+	TRACE("SUB (HL)");
 }
 
 void SUB_FromPC(gameboy_t* gb)
@@ -519,7 +520,7 @@ void SUB_FromPC(gameboy_t* gb)
 	cpu->pc++;
 	SUB_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("SUB %02X", value);
+	TRACE("SUB %02X", value);
 }
 
 void SBC_Value(gameboy_t* gb, uint8_t value)
@@ -539,7 +540,7 @@ void SBC_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 {
 	cpu_t* cpu = &gb->cpu;
 	SBC_Value(gb, *reg);
-	printf("SBC A,%s", regName);
+	TRACE("SBC A,%s", regName);
 }
 
 void SBC_FromHL(gameboy_t* gb)
@@ -548,7 +549,7 @@ void SBC_FromHL(gameboy_t* gb)
 	uint8_t value = readByteFromAddress(gb, cpu->hl);
 	SBC_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("SBC A,(HL)");
+	TRACE("SBC A,(HL)");
 }
 
 void SBC_FromPC(gameboy_t* gb)
@@ -558,7 +559,7 @@ void SBC_FromPC(gameboy_t* gb)
 	cpu->pc++;
 	SBC_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("SBC A,%02X", value);
+	TRACE("SBC A,%02X", value);
 }
 
 void CP_Value(gameboy_t* gb, uint8_t value)
@@ -575,7 +576,7 @@ void CP_8BitReg(gameboy_t* gb, uint8_t* reg, const char* regName)
 {
 	cpu_t* cpu = &gb->cpu;
 	CP_Value(gb, *reg);
-	printf("CP %s", regName);
+	TRACE("CP %s", regName);
 }
 
 void CP_FromHL(gameboy_t* gb)
@@ -584,7 +585,7 @@ void CP_FromHL(gameboy_t* gb)
 	uint8_t value = readByteFromAddress(gb, cpu->hl);
 	CP_Value(gb, value);
 	cpu->currentIstructionCycles = 8;
-	printf("CP (HL)");
+	TRACE("CP (HL)");
 }
 
 void XOR_FromHL(gameboy_t* gb)
@@ -594,7 +595,7 @@ void XOR_FromHL(gameboy_t* gb)
 	cpu->a = cpu->a ^ value;
 	setFlags(gb, cpu->a, 0, 0, 0);
 	cpu->currentIstructionCycles = 8;
-	printf("XOR (HL)");
+	TRACE("XOR (HL)");
 }
 
 void XOR_FromPC(gameboy_t* gb)
@@ -605,7 +606,7 @@ void XOR_FromPC(gameboy_t* gb)
 	cpu->a = cpu->a ^ value;
 	setFlags(gb, cpu->a, 0, 0, 0);
 	cpu->currentIstructionCycles = 8;
-	printf("XOR %02X", value);
+	TRACE("XOR %02X", value);
 }
 
 void INC_HLAddress(gameboy_t* gb)
@@ -617,7 +618,7 @@ void INC_HLAddress(gameboy_t* gb)
 	uint8_t hcarry = (((originalValue & 0xF) + 1) & 0x10) == 0x10;
 	setFlags(gb, value, 0, hcarry, isFlagSet(gb, FLAG_CARRY));
 	cpu->currentIstructionCycles = 12;
-	printf("INC (HL)");
+	TRACE("INC (HL)");
 }
 
 void DEC_HLAddress(gameboy_t* gb)
@@ -629,7 +630,7 @@ void DEC_HLAddress(gameboy_t* gb)
 	uint8_t hcarry = (((originalValue & 0xF) - (value & 0xF)) & 0x10) == 0x10;
 	setFlags(gb, value, 1, hcarry, isFlagSet(gb, FLAG_CARRY));
 	cpu->currentIstructionCycles = 12;
-	printf("DEC (HL)");
+	TRACE("DEC (HL)");
 }
 
 void Rotate_A_RRCA(gameboy_t* gb)
@@ -641,7 +642,7 @@ void Rotate_A_RRCA(gameboy_t* gb)
 	cpu->a = value;
 	cpu->f = carry ? FLAG_CARRY : 0;
 	cpu->currentIstructionCycles = 4;
-	printf("RRCA");
+	TRACE("RRCA");
 }
 
 void Rotate_A_RLA(gameboy_t* gb)
@@ -654,7 +655,7 @@ void Rotate_A_RLA(gameboy_t* gb)
 	cpu->a = value;
 	cpu->f = newCarry ? FLAG_CARRY : 0;
 	cpu->currentIstructionCycles = 4;
-	printf("RLA");
+	TRACE("RLA");
 }
 
 void Rotate_A_RRA(gameboy_t* gb)
@@ -667,7 +668,7 @@ void Rotate_A_RRA(gameboy_t* gb)
 	cpu->a = value;
 	cpu->f = newCarry ? FLAG_CARRY : 0;
 	cpu->currentIstructionCycles = 4;
-	printf("RRA");
+	TRACE("RRA");
 }
 
 void DAA(gameboy_t* gb)
@@ -693,7 +694,7 @@ void DAA(gameboy_t* gb)
 
 	setFlags(gb, a, subtract, 0, carry);
 	cpu->currentIstructionCycles = 4;
-	printf("DAA");
+	TRACE("DAA");
 }
 
 void SCF(gameboy_t* gb)
@@ -702,7 +703,7 @@ void SCF(gameboy_t* gb)
 	cpu->f &= FLAG_ZERO;
 	cpu->f |= FLAG_CARRY;
 	cpu->currentIstructionCycles = 4;
-	printf("SCF");
+	TRACE("SCF");
 }
 
 void CCF(gameboy_t* gb)
@@ -712,7 +713,7 @@ void CCF(gameboy_t* gb)
 	cpu->f &= FLAG_ZERO;
 	cpu->f |= carry;
 	cpu->currentIstructionCycles = 4;
-	printf("CCF");
+	TRACE("CCF");
 }
 
 void JumpRelative(gameboy_t* gb, uint8_t condition, const char* mnemonic)
@@ -732,11 +733,11 @@ void JumpRelative(gameboy_t* gb, uint8_t condition, const char* mnemonic)
 
 	if (mnemonic[0] != '\0')
 	{
-		printf("JR %s,%02X", mnemonic, (uint8_t)offset);
+		TRACE("JR %s,%02X", mnemonic, (uint8_t)offset);
 	}
 	else
 	{
-		printf("JR %02X", (uint8_t)offset);
+		TRACE("JR %02X", (uint8_t)offset);
 	}
 }
 
@@ -752,7 +753,7 @@ void Ret_Conditional(gameboy_t* gb, uint8_t condition, const char* mnemonic)
 	{
 		cpu->currentIstructionCycles = 8;
 	}
-	printf("RET %s", mnemonic);
+	TRACE("RET %s", mnemonic);
 }
 
 void Call_Conditional(gameboy_t* gb, uint8_t condition, const char* mnemonic)
@@ -770,7 +771,7 @@ void Call_Conditional(gameboy_t* gb, uint8_t condition, const char* mnemonic)
 	{
 		cpu->currentIstructionCycles = 12;
 	}
-	printf("CALL %s,%04X", mnemonic, addressToJump);
+	TRACE("CALL %s,%04X", mnemonic, addressToJump);
 }
 
 void Jp_Conditional(gameboy_t* gb, uint8_t condition, const char* mnemonic)
@@ -787,7 +788,7 @@ void Jp_Conditional(gameboy_t* gb, uint8_t condition, const char* mnemonic)
 	{
 		cpu->currentIstructionCycles = 12;
 	}
-	printf("JP %s,%04X", mnemonic, address);
+	TRACE("JP %s,%04X", mnemonic, address);
 }
 
 void ADD_SP_r8(gameboy_t* gb)
@@ -803,7 +804,7 @@ void ADD_SP_r8(gameboy_t* gb)
 	cpu->sp = sp + offset;
 	cpu->f = (hcarry ? FLAG_HALF_CARRY : 0) | (carry ? FLAG_CARRY : 0);
 	cpu->currentIstructionCycles = 16;
-	printf("ADD SP,%02X", (uint8_t)offset);
+	TRACE("ADD SP,%02X", (uint8_t)offset);
 }
 
 void LD_HL_SPPlusR8(gameboy_t* gb)
@@ -819,7 +820,7 @@ void LD_HL_SPPlusR8(gameboy_t* gb)
 	cpu->hl = sp + offset;
 	cpu->f = (hcarry ? FLAG_HALF_CARRY : 0) | (carry ? FLAG_CARRY : 0);
 	cpu->currentIstructionCycles = 12;
-	printf("LD HL,SP+%02X", (uint8_t)offset);
+	TRACE("LD HL,SP+%02X", (uint8_t)offset);
 }
 
 void LD_Address_SP(gameboy_t* gb)
@@ -829,7 +830,7 @@ void LD_Address_SP(gameboy_t* gb)
 	cpu->pc += 2;
 	writeWordToAddress(gb, address, cpu->sp);
 	cpu->currentIstructionCycles = 20;
-	printf("LD (%04X),SP", address);
+	TRACE("LD (%04X),SP", address);
 }
 
 void LD_A_FromAddress(gameboy_t* gb)
@@ -839,7 +840,7 @@ void LD_A_FromAddress(gameboy_t* gb)
 	cpu->pc += 2;
 	cpu->a = readByteFromAddress(gb, address);
 	cpu->currentIstructionCycles = 16;
-	printf("LD A,(%04X)", address);
+	TRACE("LD A,(%04X)", address);
 }
 
 void LD_RegAddressHighToReg(gameboy_t* gb, uint8_t* regDest, uint8_t* regAddress, const char* regDestName, const char* regAddressName)
@@ -848,7 +849,7 @@ void LD_RegAddressHighToReg(gameboy_t* gb, uint8_t* regDest, uint8_t* regAddress
 	uint8_t value = readByteFromAddress(gb, 0xff00 + *regAddress);
 	*regDest = value;
 	cpu->currentIstructionCycles = 8;
-	printf("LD %s,(FF00+%s)", regDestName, regAddressName);
+	TRACE("LD %s,(FF00+%s)", regDestName, regAddressName);
 }
 
 uint8_t ReadCBOperand(gameboy_t* gb, uint8_t regIndex)
@@ -898,7 +899,7 @@ void ServiceInterrupt(gameboy_t* gb, uint8_t bit, uint16_t address)
 	PushWordToStack(gb, cpu->pc);
 	cpu->pc = address;
 	cpu->totalCycles += 20;
-	printf(" [INTERRUPT -> %04X]", address);
+	TRACE(" [INTERRUPT -> %04X]", address);
 }
 
 void HandleInterrupts(gameboy_t* gb)
@@ -946,13 +947,13 @@ void cpuStep(gameboy_t* gb) {
 	if (cpuInstance.currentIstructionOpCode == 0xcb)
 	{
 		cpuInstance.currentIstructionCBOpCode = readByteFromAddress(gb, cpuInstance.pc+1);
-		printf("%04X - %02X %02X:", cpuInstance.pc, cpuInstance.currentIstructionOpCode, cpuInstance.currentIstructionCBOpCode);
+		TRACE("%04X - %02X %02X:", cpuInstance.pc, cpuInstance.currentIstructionOpCode, cpuInstance.currentIstructionCBOpCode);
 		cpuInstance.pc++;
 		cpuInstance.pc++;
 	}
 	else
 	{
-		printf("%04X - %02X :", cpuInstance.pc, cpuInstance.currentIstructionOpCode);
+		TRACE("%04X - %02X :", cpuInstance.pc, cpuInstance.currentIstructionOpCode);
 		cpuInstance.pc++;
 	}
 	
@@ -961,7 +962,7 @@ void cpuStep(gameboy_t* gb) {
 	
 		case 0x00:
 		{
-			printf("noop");
+			TRACE("noop");
 			cpuInstance.currentIstructionCycles = 4;
 			break;
 		}
@@ -1049,7 +1050,7 @@ void cpuStep(gameboy_t* gb) {
 		{
 			cpuInstance.pc++;
 			cpuInstance.currentIstructionCycles = 4;
-			printf("STOP (unimplemented - treated as NOP)");
+			TRACE("STOP (unimplemented - treated as NOP)");
 			break;
 		}
 		case 0x11:
@@ -1142,7 +1143,7 @@ void cpuStep(gameboy_t* gb) {
 			writeByteToAddress(gb, cpuInstance.hl, cpuInstance.a);
 			cpuInstance.hl++;
 			cpuInstance.currentIstructionCycles = 8;
-			printf("LD (HL+),A");
+			TRACE("LD (HL+),A");
 			break;
 		}
 		case 0x24:
@@ -1221,7 +1222,7 @@ void cpuStep(gameboy_t* gb) {
 			writeByteToAddress(gb, address, cpuInstance.a);
 			cpuInstance.hl--;
 			cpuInstance.currentIstructionCycles = 8;
-			printf("LD (HL-),A");
+			TRACE("LD (HL-),A");
 			break;
 		}
 		case 0x33:
@@ -1264,7 +1265,7 @@ void cpuStep(gameboy_t* gb) {
 			cpuInstance.a = readByteFromAddress(gb, cpuInstance.hl);
 			cpuInstance.hl--;
 			cpuInstance.currentIstructionCycles = 8;
-			printf("LD A,(HL-)");
+			TRACE("LD A,(HL-)");
 			break;
 		}
 		case 0x3b:
@@ -1585,7 +1586,7 @@ void cpuStep(gameboy_t* gb) {
 		case 0x76:
 		{
 			cpuInstance.currentIstructionCycles = 4;
-			printf("HALT (unimplemented - treated as NOP)");
+			TRACE("HALT (unimplemented - treated as NOP)");
 			break;
 		}
 		case 0x77:
@@ -1981,7 +1982,7 @@ void cpuStep(gameboy_t* gb) {
 			jump(gb, address);
 
 			cpuInstance.currentIstructionCycles = 16;
-			printf("jp %04X", address);
+			TRACE("jp %04X", address);
 			break;
 		}
 		case 0xc4:
@@ -2034,21 +2035,21 @@ void cpuStep(gameboy_t* gb) {
 				uint8_t bitSet = value & (1 << bitOrSub);
 				setFlags(gb, bitSet, 0, 1, isFlagSet(gb, FLAG_CARRY));
 				cpuInstance.currentIstructionCycles = isHL ? 12 : 8;
-				printf("BIT %d,%s", bitOrSub, regName);
+				TRACE("BIT %d,%s", bitOrSub, regName);
 			}
 			else if (opGroup == 2)
 			{
 				value &= ~(1 << bitOrSub);
 				WriteCBOperand(gb, regIndex, value);
 				cpuInstance.currentIstructionCycles = isHL ? 16 : 8;
-				printf("RES %d,%s", bitOrSub, regName);
+				TRACE("RES %d,%s", bitOrSub, regName);
 			}
 			else if (opGroup == 3)
 			{
 				value |= (1 << bitOrSub);
 				WriteCBOperand(gb, regIndex, value);
 				cpuInstance.currentIstructionCycles = isHL ? 16 : 8;
-				printf("SET %d,%s", bitOrSub, regName);
+				TRACE("SET %d,%s", bitOrSub, regName);
 			}
 			else
 			{
@@ -2061,42 +2062,42 @@ void cpuStep(gameboy_t* gb) {
 					case 0:
 						carryOut = (value >> 7) & 1;
 						result = (value << 1) | carryOut;
-						printf("RLC %s", regName);
+						TRACE("RLC %s", regName);
 						break;
 					case 1:
 						carryOut = value & 1;
 						result = (value >> 1) | (carryOut << 7);
-						printf("RRC %s", regName);
+						TRACE("RRC %s", regName);
 						break;
 					case 2:
 						carryOut = (value >> 7) & 1;
 						result = (value << 1) | oldCarry;
-						printf("RL %s", regName);
+						TRACE("RL %s", regName);
 						break;
 					case 3:
 						carryOut = value & 1;
 						result = (value >> 1) | (oldCarry << 7);
-						printf("RR %s", regName);
+						TRACE("RR %s", regName);
 						break;
 					case 4:
 						carryOut = (value >> 7) & 1;
 						result = value << 1;
-						printf("SLA %s", regName);
+						TRACE("SLA %s", regName);
 						break;
 					case 5:
 						carryOut = value & 1;
 						result = (value >> 1) | (value & 0x80);
-						printf("SRA %s", regName);
+						TRACE("SRA %s", regName);
 						break;
 					case 6:
 						carryOut = 0;
 						result = ((value << 4) & 0xF0) | ((value >> 4) & 0x0F);
-						printf("SWAP %s", regName);
+						TRACE("SWAP %s", regName);
 						break;
 					case 7:
 						carryOut = value & 1;
 						result = value >> 1;
-						printf("SRL %s", regName);
+						TRACE("SRL %s", regName);
 						break;
 				}
 
@@ -2170,7 +2171,7 @@ void cpuStep(gameboy_t* gb) {
 		{
 			Ret(gb);
 			cpuInstance.ime = 1;
-			printf(" (RETI)");
+			TRACE(" (RETI)");
 			break;
 		}
 		case 0xda:
@@ -2201,7 +2202,7 @@ void cpuStep(gameboy_t* gb) {
 			writeByteToAddress(gb, (addressOffset + 0xff00), cpuInstance.a);
 
 			cpuInstance.currentIstructionCycles = 12;
-			printf("LDH ($FF00+%04X), A", addressOffset);
+			TRACE("LDH ($FF00+%04X), A", addressOffset);
 			break;
 		}
 		case 0xe1:
@@ -2226,7 +2227,7 @@ void cpuStep(gameboy_t* gb) {
 			writeByteToAddress(gb, address, cpuInstance.a);
 
 			cpuInstance.currentIstructionCycles = 16;
-			printf("LD %04X, A", address);
+			TRACE("LD %04X, A", address);
 			break;
 		}
 		case 0xE6:
@@ -2266,7 +2267,7 @@ void cpuStep(gameboy_t* gb) {
 			uint8_t value = readByteFromAddress(gb, address + 0xff00);
 			cpuInstance.a = value;
 			cpuInstance.currentIstructionCycles = 12;
-			printf("LDH A,($FF00+%04X)", address);
+			TRACE("LDH A,($FF00+%04X)", address);
 			break;
 		}
 		case 0xf1:
@@ -2282,7 +2283,7 @@ void cpuStep(gameboy_t* gb) {
 		case 0xf3:
 		{
 			cpuInstance.ime = 0;
-			printf("DI");
+			TRACE("DI");
 			cpuInstance.currentIstructionCycles = 4;
 			break;
 		}
@@ -2305,7 +2306,7 @@ void cpuStep(gameboy_t* gb) {
 		{
 			cpuInstance.sp = cpuInstance.hl;
 			cpuInstance.currentIstructionCycles = 8;
-			printf("LD SP,HL");
+			TRACE("LD SP,HL");
 			break;
 		}
 		case 0xfa:
@@ -2316,7 +2317,7 @@ void cpuStep(gameboy_t* gb) {
 		case 0xfb:
 		{
 			cpuInstance.ime = 1;
-			printf("EI");
+			TRACE("EI");
 			cpuInstance.currentIstructionCycles = 4;
 			break;
 		}
@@ -2337,7 +2338,7 @@ void cpuStep(gameboy_t* gb) {
 
 			cpuInstance.pc++;
 			cpuInstance.currentIstructionCycles = 8;
-			printf("CP %02X", value);
+			TRACE("CP %02X", value);
 			break;
 		}
 		case 0xff:
@@ -2348,14 +2349,14 @@ void cpuStep(gameboy_t* gb) {
 		default:
 		{
 			cpuInstance.currentIstructionCycles = 0;
- 			printf("Unknown");
+ 			TRACE("Unknown");
 			break;
 		}
 	}
 
 	cpuInstance.totalCycles += cpuInstance.currentIstructionCycles;
 
-	printf("\tA:%02X B:%02X C:%02X D:%02X E:%02X F:%02X HL:%04X SP:%04X\n", cpuInstance.a, cpuInstance.b, cpuInstance.c, cpuInstance.d, cpuInstance.e, cpuInstance.f, cpuInstance.hl, cpuInstance.sp);
+	TRACE("\tA:%02X B:%02X C:%02X D:%02X E:%02X F:%02X HL:%04X SP:%04X\n", cpuInstance.a, cpuInstance.b, cpuInstance.c, cpuInstance.d, cpuInstance.e, cpuInstance.f, cpuInstance.hl, cpuInstance.sp);
 
 }
 

@@ -3,6 +3,7 @@
 #include "timer.h"
 #include "screen.h"
 #include "GameBoy.h"
+#include "debug.h"
 
 void requestInterrupt(hardwareRegisters_t* hardwareRegisters, uint8_t flagBit)
 {
@@ -59,7 +60,7 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	}
 	else
 	{
-		printf(" [ADRESS NOT IMPLEMENTED] ");
+		TRACE(" [ADRESS NOT IMPLEMENTED] ");
 	}
 
 	return byte;
@@ -114,6 +115,6 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	}
 	else
 	{
-		printf(" [ADRESS NOT IMPLEMENTED] ");
+		TRACE(" [ADRESS NOT IMPLEMENTED] ");
 	}
 }
