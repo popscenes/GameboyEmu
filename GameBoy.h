@@ -10,6 +10,7 @@
 #include "timer.h"
 #include "screen.h"
 #include "Cart.h"
+#include "joypad.h"
 
 typedef struct gameboy_s {
 	cpu_t cpu;
@@ -18,6 +19,7 @@ typedef struct gameboy_s {
 	timer_t timer;
 	screen_t screen;
 	cart_t cart;
+	joypad_t joypad;
 } gameboy_t;
 
 void gameboyStep(gameboy_t* gb);

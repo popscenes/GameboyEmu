@@ -9,14 +9,7 @@ uint8_t screenReadByte(screen_t* screen, uint16_t address)
 
 	if (address == IO_REG_LCDC_Y_POS)
 	{
-		//temp did lcd emulated
-
-		screen->lcdYPos++;
-		if (screen->lcdYPos > 153)
-		{
-			screen->lcdYPos = 0;
-		}
-		return screen->lcdYPos;
+		return screen->ly;
 	}
 
 	if (address == IO_REG_LCDC)
@@ -27,6 +20,16 @@ uint8_t screenReadByte(screen_t* screen, uint16_t address)
 	if (address == IO_REG_BGP)
 	{
 		return screen->bgp;
+	}
+
+	if (address == IO_REG_STAT)
+	{
+		return screen->stat | STAT_UNUSED_BIT;
+	}
+
+	if (address == IO_REG_LYC)
+	{
+		return screen->lyc;
 	}
 
 	return 0;
@@ -48,6 +51,99 @@ void screenWriteByte(screen_t* screen, uint16_t address, uint8_t value)
 	{
 		screen->bgp = value;
 	}
+
+	if (address == IO_REG_STAT)
+	{
+		screen->stat = (screen->stat & ~STAT_WRITABLE_MASK) | (value & STAT_WRITABLE_MASK);
+	}
+
+	if (address == IO_REG_LYC)
+	{
+		screen->lyc = value;
+	}
+}
+
+void screenStep(screen_t* screen, hardwareRegisters_t* hardwareRegisters, uint8_t cycles)
+{
+	if ((LCDC_BIT_LCD_ENABLE & screen->lcdc) == 0)
+	{
+		screen->scanlineCycles = 0;
+		screen->ly = 0;
+		screen->stat = screen->stat & ~STAT_MODE_MASK;
+		return;
+	}
+
+	screen->scanlineCycles += cycles;
+
+
+	if (screen->scanlineCycles >= CYCLES_PER_SCANLINE)
+	{
+		screen->scanlineCycles -= CYCLES_PER_SCANLINE;
+		screen->ly++;
+
+		if (screen->ly == VBLANK_START_LINE)
+		{
+			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_VBLANK);
+			screen->frameReady = true;
+		}
+
+		else if (screen->ly == SCANLINES_PER_FRAME)
+		{
+			screen->ly = 0;
+		}
+
+		if (screen->ly == screen->lyc)
+		{
+			screen->stat = screen->stat | STAT_BIT_LYC_EQUAL;
+			if (screen->stat & STAT_BIT_LYC_INT)
+			{
+				requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+			}
+		}
+		else
+		{
+			screen->stat = screen->stat & ~STAT_BIT_LYC_EQUAL;
+		}
+	}
+
+	uint8_t screenMode = PPU_MODE_HBLANK;
+
+	if (screen->ly >= VBLANK_START_LINE)
+	{
+		screenMode = PPU_MODE_VBLANK;
+	}
+	else if (screen->scanlineCycles < OAM_SCAN_END_CYCLE)
+	{
+		screenMode = PPU_MODE_OAM_SCAN;
+	}
+	else if (screen->scanlineCycles < DRAWING_END_CYCLE)
+	{
+		screenMode = PPU_MODE_DRAWING;
+	}
+
+	uint8_t currentMode = screen->stat & STAT_MODE_MASK;
+	screen->stat = (screen->stat & ~STAT_MODE_MASK) | screenMode;
+
+	if (screenMode != currentMode)
+	{
+		if (screenMode == PPU_MODE_HBLANK && (screen->stat & STAT_BIT_HBLANK_INT))
+		{
+			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+		}
+
+		if (screenMode == PPU_MODE_VBLANK && (screen->stat & STAT_BIT_VBLANK_INT))
+		{
+			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+		}
+
+		if (screenMode == PPU_MODE_OAM_SCAN && (screen->stat & STAT_BIT_OAM_INT))
+		{
+			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+		}
+
+		
+	}
+
 }
 
 void screenRenderBackground(screen_t* screen, uint32_t* framebuffer)

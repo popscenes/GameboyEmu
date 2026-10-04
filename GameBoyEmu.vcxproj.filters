@@ -39,6 +39,9 @@
     <ClCompile Include="SDL_GameboyRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="joypad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cart.h">
@@ -63,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="joypad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

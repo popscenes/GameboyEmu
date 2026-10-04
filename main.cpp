@@ -15,7 +15,23 @@ using namespace std;
 bool isRunning;
 bool debugTrace = false;
 
-void ProcessEvents()
+void HandleJoypadKey(joypad_t* joypad, SDL_Keycode key, bool pressed)
+{
+	switch (key)
+	{
+	case SDLK_RIGHT:     joypadSetButton(joypad, JOYPAD_BUTTON_RIGHT, pressed); break;
+	case SDLK_LEFT:      joypadSetButton(joypad, JOYPAD_BUTTON_LEFT, pressed); break;
+	case SDLK_UP:        joypadSetButton(joypad, JOYPAD_BUTTON_UP, pressed); break;
+	case SDLK_DOWN:      joypadSetButton(joypad, JOYPAD_BUTTON_DOWN, pressed); break;
+	case SDLK_z:         joypadSetButton(joypad, JOYPAD_BUTTON_A, pressed); break;
+	case SDLK_x:         joypadSetButton(joypad, JOYPAD_BUTTON_B, pressed); break;
+	case SDLK_BACKSPACE: joypadSetButton(joypad, JOYPAD_BUTTON_SELECT, pressed); break;
+	case SDLK_RETURN:    joypadSetButton(joypad, JOYPAD_BUTTON_START, pressed); break;
+	default: break;
+	}
+}
+
+void ProcessEvents(joypad_t* joypad)
 {
 	SDL_Event event;
 	while (SDL_PollEvent(&event))
@@ -35,6 +51,13 @@ void ProcessEvents()
 				debugTrace = !debugTrace;
 				printf("\nDebug trace %s\n", debugTrace ? "ON" : "OFF");
 			}
+			else
+			{
+				HandleJoypadKey(joypad, event.key.keysym.sym, true);
+			}
+			break;
+		case SDL_KEYUP:
+			HandleJoypadKey(joypad, event.key.keysym.sym, false);
 			break;
 		default:
 			break;
@@ -79,7 +102,6 @@ int main(int argc, char* args[])
 	QueryPerformanceFrequency(&Frequency);
 
 	isRunning = true;
-	uint32_t frameCycles = 0;
 	
 	QueryPerformanceCounter(&FrameStart);
 	while (isRunning)
@@ -89,11 +111,10 @@ int main(int argc, char* args[])
 
 		gameboyStep(&gb);
 
-		frameCycles += cpuCurrentIstructionCycles(&gb);
-		if (frameCycles >= CYCLES_PER_FRAME)
+		if (gb.screen.frameReady)
 		{
-			frameCycles -= CYCLES_PER_FRAME;
-			ProcessEvents();
+			gb.screen.frameReady = false;
+			ProcessEvents(&gb.joypad);
 			screenRenderBackground(&gb.screen, renderer.framebuffer);
 			GameBoyRendererPresent(&renderer);
 

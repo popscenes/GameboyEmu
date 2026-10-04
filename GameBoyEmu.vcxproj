@@ -156,12 +156,14 @@
     <ClCompile Include="timer.cpp" />
     <ClCompile Include="screen.cpp" />
     <ClCompile Include="gameboy.cpp" />
+    <ClCompile Include="joypad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bus.h" />
     <ClInclude Include="Cart.h" />
     <ClInclude Include="cpu.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="joypad.h" />
     <ClInclude Include="GameBoy.h" />
     <ClInclude Include="SDL_GameboyRenderer.h" />
     <ClInclude Include="timer.h" />

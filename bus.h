@@ -14,6 +14,8 @@
 #define IO_REG_INTERRUPT_FLAG 0xff0f
 #define IO_REG_INTERRUPT_ENABLE 0xffff
 
+#define INTERRUPT_FLAG_VBLANK 0x01
+#define INTERRUPT_FLAG_STAT 0x02
 #define INTERRUPT_FLAG_TIMER 0x04
 
 typedef struct {

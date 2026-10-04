@@ -27,7 +27,7 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	{
 		byte = readyByteFromCart(&gb->cart, adderss);
 	}
-	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP)
+	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP || adderss == IO_REG_STAT || adderss == IO_REG_LYC)
 	{
 		return screenReadByte(&gb->screen, adderss);
 	}
@@ -37,8 +37,7 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	}
 	else if (adderss == IO_REG_JOYPAD)
 	{
-		// Buttons are active-low; report nothing pressed until real input exists.
-		return 0xFF;
+		return joypadReadByte(&gb->joypad);
 	}
 	else if (adderss == IO_REG_INTERRUPT_FLAG)
 	{
@@ -82,7 +81,7 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	{
 		writeByteToCart(&gb->cart, adderss, value);
 	}
-	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP)
+	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP || adderss == IO_REG_STAT || adderss == IO_REG_LYC)
 	{
 		screenWriteByte(&gb->screen, adderss, value);
 	}
@@ -98,6 +97,7 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	}
 	else if (adderss == IO_REG_JOYPAD)
 	{
+		joypadWriteByte(&gb->joypad, value);
 	}
 	else if (adderss == IO_REG_INTERRUPT_FLAG)
 	{
