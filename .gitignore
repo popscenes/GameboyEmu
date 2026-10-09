@@ -352,3 +352,7 @@ MigrationBackup/
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
 /gb-test-roms-master/Addams_Family_The.gb
+
+# Game Boy ROMs
+*.gb
+*.gbc
