@@ -39,6 +39,7 @@
 
 #define SPRITE_Y_OFFSET 16
 #define SPRITE_X_OFFSET 8
+#define MAX_SPRITES_PER_LINE 10
 
 #define OAM_ATTR_BG_PRIORITY 0x80
 #define OAM_ATTR_Y_FLIP 0x40
@@ -93,15 +94,12 @@ typedef struct {
 	uint16_t scanlineCycles;
 	bool frameReady;
 	uint32_t framebuffer[GB_SCREEN_WIDTH * GB_SCREEN_HEIGHT];
+	uint8_t bgColorIds[GB_SCREEN_WIDTH];
 } screen_t;
 
 uint8_t screenReadByte(screen_t* screen, uint16_t address);
 void screenWriteByte(screen_t* screen, uint16_t address, uint8_t value);
 void screenStep(screen_t* screen, hardwareRegisters_t* hardwareRegisters, uint8_t cycles);
-
-// Decodes the current background tile map + tile data into a 160x144 ARGB8888 framebuffer.
-void screenRenderBackground(screen_t* screen, uint32_t* framebuffer);
-void screenRenderSprites(screen_t* screen, uint32_t* framebuffer);
 void screenRenderBackgroundLine(screen_t* screen, uint8_t line);
 void screenRenderSpritesLine(screen_t* screen, uint8_t line);
 uint32_t getPixelColour(uint8_t colorID, uint8_t pallette);

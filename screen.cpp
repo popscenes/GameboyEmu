@@ -244,7 +244,9 @@ void screenRenderBackgroundLine(screen_t* screen, uint8_t line)
 		uint8_t pixelHighbit = (highByte >> (7 - (bgX%8))) & 1;
 
 		uint8_t colorID = (pixelHighbit << 1) | pixelLowBit;
+		screen->bgColorIds[x] = colorID;
 		uint32_t pixelColour = getPixelColour(colorID, screen->bgp);
+		
 
 		screen->framebuffer[line * GB_SCREEN_WIDTH + x] = pixelColour;
 	}
@@ -257,9 +259,63 @@ void screenRenderSpritesLine(screen_t* screen, uint8_t line)
 		return;
 	}
 
-	for (int32_t i = OAM_SPRITE_COUNT-1; i >= 0; i--)
+	int spriteHeight = 8;
+	if ((screen->lcdc & LCDC_BIT_OBJ_SIZE) != 0)
+	{
+		spriteHeight = 16;
+	}
+
+	int selectedSprites[MAX_SPRITES_PER_LINE];
+	int selectedSpriteCount = 0;
+	for (int i = 0; i < OAM_SPRITE_COUNT; i++)
 	{
 		uint32_t oamIndex = i * OAM_ENTRY_SIZE;
+		uint8_t spriteYPos = screen->oam[oamIndex + OAM_BYTE_Y];
+		int32_t positionY = spriteYPos - SPRITE_Y_OFFSET;
+		int32_t tileYPos = line - positionY;
+		if (tileYPos < 0 || tileYPos >= spriteHeight)
+		{
+			continue;
+		}
+
+		selectedSprites[selectedSpriteCount] = i;
+		selectedSpriteCount++;
+		if (selectedSpriteCount == MAX_SPRITES_PER_LINE)
+		{
+			break;
+		}
+	}
+
+	for (int i = 1; i < selectedSpriteCount; i++)
+	{
+		int currentIndex = i;
+
+		uint32_t currentOamIndex = selectedSprites[currentIndex] * OAM_ENTRY_SIZE;
+		uint8_t currentX = screen->oam[currentOamIndex + OAM_BYTE_X];
+
+		for (int checkIndex = currentIndex-1; checkIndex >= 0; checkIndex--)
+		{
+			uint32_t checkOamIndex = selectedSprites[checkIndex] * OAM_ENTRY_SIZE;
+			uint8_t checkX = screen->oam[checkOamIndex + OAM_BYTE_X];
+
+			if (currentX < checkX)
+			{
+				int temp = selectedSprites[checkIndex];
+				selectedSprites[checkIndex] = selectedSprites[currentIndex];
+				selectedSprites[currentIndex] = temp;
+				currentIndex--;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+	}
+
+	for (int32_t i = selectedSpriteCount-1; i >= 0; i--)
+	{
+		uint32_t oamIndex = selectedSprites[i] * OAM_ENTRY_SIZE;
 
 		uint8_t spriteYPos = screen->oam[oamIndex + OAM_BYTE_Y];
 		uint8_t spriteXPos = screen->oam[oamIndex + OAM_BYTE_X];
@@ -271,6 +327,7 @@ void screenRenderSpritesLine(screen_t* screen, uint8_t line)
 
 		bool flipX = false;
 		bool flipY = false;
+		bool bgPriority = false;
 
 		if ((spriteAttributes & OAM_ATTR_Y_FLIP) != 0)
 		{
@@ -282,18 +339,23 @@ void screenRenderSpritesLine(screen_t* screen, uint8_t line)
 			flipX = true;
 		}
 
-		uint32_t tileIndex = spriteTile * GB_TILE_BYTES;
-
-		int32_t tileYPos = line - positionY;
-		if (tileYPos < 0 || tileYPos > 7)
+		if ((spriteAttributes & OAM_ATTR_BG_PRIORITY) != 0)
 		{
-			continue;
+			bgPriority = true;
 		}
 
+		uint32_t tileIndex = spriteTile * GB_TILE_BYTES;
+		if (spriteHeight == 16)
+		{
+			tileIndex = (spriteTile & 0xFE) * GB_TILE_BYTES;
+		}
+
+		int32_t tileYPos = line - positionY;
 		int32_t pixelPositionY = positionY + tileYPos;
 		for (int tileXPos = 0; tileXPos < GB_TILE_ROWS; tileXPos++)
 		{
 			int32_t pixelPositionX = positionX + tileXPos;
+			
 			
 
 			if (pixelPositionX < 0 || pixelPositionX >= GB_SCREEN_WIDTH)
@@ -301,10 +363,15 @@ void screenRenderSpritesLine(screen_t* screen, uint8_t line)
 				continue;
 			}
 
-			uint32_t resolvedYRow = flipY ? (7 - tileYPos) : tileYPos;
+			if (bgPriority == true && screen->bgColorIds[pixelPositionX] != 0)
+			{
+				continue;
+			}
+
+			uint32_t resolvedYRow = flipY ? ((spriteHeight -1) - tileYPos) : tileYPos;
 			uint32_t resolvedXRow = flipX ? (7 - tileXPos) : tileXPos;
 
-			uint8_t pixelrow = (resolvedYRow % 8);
+			uint8_t pixelrow = resolvedYRow;
 			uint8_t lowByte = screen->vram[(tileIndex + pixelrow * 2)];
 			uint8_t highByte = screen->vram[(tileIndex + pixelrow * 2 + 1)];
 
