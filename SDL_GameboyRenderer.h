@@ -11,12 +11,10 @@ typedef struct
 	SDL_Renderer* renderer;
 	SDL_Texture* texture;
 
-	uint32_t framebuffer[GB_SCREEN_WIDTH * GB_SCREEN_HEIGHT];
-
 } SDl_GameBoyRenderer_t;
 
 bool GameBoyRendererInit(SDl_GameBoyRenderer_t* renderer);
-void GameBoyRendererPresent(SDl_GameBoyRenderer_t* renderer);
+void GameBoyRendererPresent(SDl_GameBoyRenderer_t* renderer, const uint32_t* framebuffer);
 void GameBoyRendererShutdown(SDl_GameBoyRenderer_t* renderer);
 
 

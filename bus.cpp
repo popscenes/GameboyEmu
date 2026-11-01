@@ -10,6 +10,33 @@ void requestInterrupt(hardwareRegisters_t* hardwareRegisters, uint8_t flagBit)
 	hardwareRegisters->interruptFlag |= flagBit;
 }
 
+static bool isScreenAddress(uint16_t address)
+{
+	return (address >= VRAM_START_ADDRESS && address <= VRAM_END_ADDRESS)
+		|| (address >= OAM_START_ADDRESS && address <= OAM_END_ADDRESS)
+		|| address == IO_REG_LCDC
+		|| address == IO_REG_STAT
+		|| address == IO_REG_SCY
+		|| address == IO_REG_SCX
+		|| address == IO_REG_LCDC_Y_POS
+		|| address == IO_REG_LYC
+		|| address == IO_REG_BGP
+		|| address == IO_REG_OBP0
+		|| address == IO_REG_OBP1;
+}
+
+static void oamDmaTransfer(gameboy_t* gb, uint8_t sourcePage)
+{
+	uint16_t dmaAddress = sourcePage << 8;
+
+	for (uint16_t i = 0; i < DMA_TRANSFER_LENGTH; i++)
+	{
+		uint8_t dmaValue =  readByteFromAddress(gb, dmaAddress + i);
+		writeByteToAddress(gb, OAM_START_ADDRESS + i, dmaValue);
+	}
+
+}
+
 uint16_t readWordFromAddress(gameboy_t* gb, uint16_t adderss) {
 
 	uint8_t loByte = 0;
@@ -27,7 +54,7 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	{
 		byte = readyByteFromCart(&gb->cart, adderss);
 	}
-	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP || adderss == IO_REG_STAT || adderss == IO_REG_LYC)
+	else if (isScreenAddress(adderss))
 	{
 		return screenReadByte(&gb->screen, adderss);
 	}
@@ -81,9 +108,13 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	{
 		writeByteToCart(&gb->cart, adderss, value);
 	}
-	else if ((adderss >= VRAM_START_ADDRESS && adderss <= VRAM_END_ADDRESS) || adderss == IO_REG_LCDC_Y_POS || adderss == IO_REG_LCDC || adderss == IO_REG_BGP || adderss == IO_REG_STAT || adderss == IO_REG_LYC)
+	else if (isScreenAddress(adderss))
 	{
 		screenWriteByte(&gb->screen, adderss, value);
+	}
+	else if (adderss == IO_REG_DMA)
+	{
+		oamDmaTransfer(gb, value);
 	}
 	else if (adderss >= INTERNAL_RAM_START_ADDRESS && adderss <= INTERNAL_RAM_END_ADDRESS)
 	{

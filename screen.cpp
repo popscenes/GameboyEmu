@@ -6,6 +6,10 @@ uint8_t screenReadByte(screen_t* screen, uint16_t address)
 	{
 		return screen->vram[address - VRAM_START_ADDRESS];
 	}
+	if (address >= OAM_START_ADDRESS && address <= OAM_END_ADDRESS)
+	{
+		return screen->oam[address - OAM_START_ADDRESS];
+	}
 
 	if (address == IO_REG_LCDC_Y_POS)
 	{
@@ -20,6 +24,26 @@ uint8_t screenReadByte(screen_t* screen, uint16_t address)
 	if (address == IO_REG_BGP)
 	{
 		return screen->bgp;
+	}
+
+	if (address == IO_REG_SCX)
+	{
+		return screen->scx;
+	}
+
+	if (address == IO_REG_SCY)
+	{
+		return screen->scy;
+	}
+
+	if (address == IO_REG_OBP0)
+	{
+		return screen->obp0;
+	}
+
+	if (address == IO_REG_OBP1)
+	{
+		return screen->obp1;
 	}
 
 	if (address == IO_REG_STAT)
@@ -41,6 +65,10 @@ void screenWriteByte(screen_t* screen, uint16_t address, uint8_t value)
 	{
 		screen->vram[address - VRAM_START_ADDRESS] = value;
 	}
+	if (address >= OAM_START_ADDRESS && address <= OAM_END_ADDRESS)
+	{
+		screen->oam[address - OAM_START_ADDRESS] = value;
+	}
 
 	if (address == IO_REG_LCDC)
 	{
@@ -50,6 +78,26 @@ void screenWriteByte(screen_t* screen, uint16_t address, uint8_t value)
 	if (address == IO_REG_BGP)
 	{
 		screen->bgp = value;
+	}
+
+	if (address == IO_REG_SCX)
+	{
+		screen->scx = value;
+	}
+
+	if (address == IO_REG_SCY)
+	{
+		screen->scy = value;
+	}
+
+	if (address == IO_REG_OBP0)
+	{
+		screen->obp0 = value;
+	}
+
+	if (address == IO_REG_OBP1)
+	{
+		screen->obp1 = value;
 	}
 
 	if (address == IO_REG_STAT)
@@ -126,6 +174,12 @@ void screenStep(screen_t* screen, hardwareRegisters_t* hardwareRegisters, uint8_
 
 	if (screenMode != currentMode)
 	{
+		if (screenMode == PPU_MODE_DRAWING)
+		{
+			screenRenderBackgroundLine(screen, screen->ly);
+			screenRenderSpritesLine(screen, screen->ly);
+		}
+
 		if (screenMode == PPU_MODE_HBLANK && (screen->stat & STAT_BIT_HBLANK_INT))
 		{
 			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
@@ -146,12 +200,22 @@ void screenStep(screen_t* screen, hardwareRegisters_t* hardwareRegisters, uint8_
 
 }
 
-void screenRenderBackground(screen_t* screen, uint32_t* framebuffer)
+uint32_t getPixelColour(uint8_t colorID, uint8_t pallette)
+{
+	
+	uint8_t shade = (pallette >> (colorID * 2)) & 0x3;
+	uint8_t gray = (255 - ((shade * 255) / 3));
+	uint32_t pixelColour = 0xFF000000 | (gray << 16) | (gray << 8) | gray;
+
+	return pixelColour;
+}
+
+void screenRenderBackgroundLine(screen_t* screen, uint8_t line)
 {
 	uint32_t tilemapAddress = BG_TILE_MAP_0_ADDRESS;
 	if ((screen->lcdc & LCDC_BIT_BG_TILE_MAP_SELECT) != 0)
 	{
-	  tilemapAddress = BG_TILE_MAP_1_ADDRESS;
+		tilemapAddress = BG_TILE_MAP_1_ADDRESS;
 	}
 
 	bool signedTileDataMode = true;
@@ -160,41 +224,106 @@ void screenRenderBackground(screen_t* screen, uint32_t* framebuffer)
 		signedTileDataMode = false;
 	}
 
-	for (int currentRow = 0; currentRow < GB_TILE_MAP_ROWS; currentRow++)
+	
+	int32_t bgY = (line + screen->scy) & 255;
+	uint8_t pixelrow = (bgY % 8);
+
+	for (int32_t x = 0; x < GB_SCREEN_WIDTH; x++)
 	{
-		for (int currentCol = 0; currentCol < GB_TILE_MAP_COLS; currentCol++)
-		{
-			int32_t vramTileAddress = tilemapAddress + ((currentRow * GB_TILE_MAP_WIDTH) + currentCol) - VRAM_START_ADDRESS;
-
-			int32_t tiledataStart = (signedTileDataMode == true) ? (TILE_DATA_SIGNED_BASE_ADDRESS + ((int8_t)screen->vram[vramTileAddress]) * GB_TILE_BYTES):
-
+		int32_t bgX = (x + screen->scx) & 255;
+		
+		int32_t vramTileAddress = (tilemapAddress + (bgY / 8) * 32 + (bgX / 8))- VRAM_START_ADDRESS;
+		int32_t tiledataStart = (signedTileDataMode == true) ? (TILE_DATA_SIGNED_BASE_ADDRESS + ((int8_t)screen->vram[vramTileAddress]) * GB_TILE_BYTES) :
 			(TILE_DATA_UNSIGNED_BASE_ADDRESS + ((uint8_t)screen->vram[vramTileAddress]) * GB_TILE_BYTES);
 
-			for (int tileXPos = 0; tileXPos < GB_TILE_ROWS; tileXPos++)
-			{
-				for (int tileYPos = 0; tileYPos < GB_TILE_COLS; tileYPos++)
-				{
-					uint8_t pixelrow = (tileYPos % 8);
-					uint8_t lowByte = screen->vram[(tiledataStart + pixelrow * 2) - VRAM_START_ADDRESS];
-					uint8_t highByte = screen->vram[(tiledataStart + pixelrow * 2 + 1) - VRAM_START_ADDRESS];
+		
+		uint8_t lowByte = screen->vram[(tiledataStart + pixelrow * 2) - VRAM_START_ADDRESS];
+		uint8_t highByte = screen->vram[(tiledataStart + pixelrow * 2 + 1) - VRAM_START_ADDRESS];
 
-					uint8_t pixelLowBit = (lowByte >> (7 - tileXPos)) & 1;
-					uint8_t pixelHighbit = (highByte >> (7 - tileXPos)) & 1;
-					uint8_t colorID = (pixelHighbit << 1) | pixelLowBit;
+		uint8_t pixelLowBit = (lowByte >> (7 - (bgX%8))) & 1;
+		uint8_t pixelHighbit = (highByte >> (7 - (bgX%8))) & 1;
 
-					uint8_t shade = (screen->bgp >> (colorID * 2)) & 0x3;
-					uint8_t gray = (255 - ((shade * 255) / 3));
-					uint32_t pixelColour = 0xFF000000 | (gray << 16) | (gray << 8) | gray;
+		uint8_t colorID = (pixelHighbit << 1) | pixelLowBit;
+		uint32_t pixelColour = getPixelColour(colorID, screen->bgp);
 
-					uint32_t screenXPos = (currentCol * GB_TILE_COLS) + tileXPos;
-					uint32_t screenYPos = (currentRow * GB_TILE_ROWS) + tileYPos;
+		screen->framebuffer[line * GB_SCREEN_WIDTH + x] = pixelColour;
+	}
+}
 
-					framebuffer[(screenYPos * GB_SCREEN_WIDTH) + screenXPos] = pixelColour;
-
-
-				}
-			}
-		}
+void screenRenderSpritesLine(screen_t* screen, uint8_t line)
+{
+	if ((screen->lcdc & LCDC_BIT_OBJ_ENABLE) == 0)
+	{
+		return;
 	}
 
+	for (int32_t i = OAM_SPRITE_COUNT-1; i >= 0; i--)
+	{
+		uint32_t oamIndex = i * OAM_ENTRY_SIZE;
+
+		uint8_t spriteYPos = screen->oam[oamIndex + OAM_BYTE_Y];
+		uint8_t spriteXPos = screen->oam[oamIndex + OAM_BYTE_X];
+		uint8_t spriteTile = screen->oam[oamIndex + OAM_BYTE_TILE];
+		uint8_t spriteAttributes = screen->oam[oamIndex + OAM_BYTE_ATTRIBUTES];
+
+		int32_t positionX = spriteXPos - SPRITE_X_OFFSET;
+		int32_t positionY = spriteYPos - SPRITE_Y_OFFSET;
+
+		bool flipX = false;
+		bool flipY = false;
+
+		if ((spriteAttributes & OAM_ATTR_Y_FLIP) != 0)
+		{
+			flipY = true;
+		}
+
+		if ((spriteAttributes & OAM_ATTR_X_FLIP) != 0)
+		{
+			flipX = true;
+		}
+
+		uint32_t tileIndex = spriteTile * GB_TILE_BYTES;
+
+		int32_t tileYPos = line - positionY;
+		if (tileYPos < 0 || tileYPos > 7)
+		{
+			continue;
+		}
+
+		int32_t pixelPositionY = positionY + tileYPos;
+		for (int tileXPos = 0; tileXPos < GB_TILE_ROWS; tileXPos++)
+		{
+			int32_t pixelPositionX = positionX + tileXPos;
+			
+
+			if (pixelPositionX < 0 || pixelPositionX >= GB_SCREEN_WIDTH)
+			{
+				continue;
+			}
+
+			uint32_t resolvedYRow = flipY ? (7 - tileYPos) : tileYPos;
+			uint32_t resolvedXRow = flipX ? (7 - tileXPos) : tileXPos;
+
+			uint8_t pixelrow = (resolvedYRow % 8);
+			uint8_t lowByte = screen->vram[(tileIndex + pixelrow * 2)];
+			uint8_t highByte = screen->vram[(tileIndex + pixelrow * 2 + 1)];
+
+			uint8_t pixelLowBit = (lowByte >> (7 - resolvedXRow)) & 1;
+			uint8_t pixelHighbit = (highByte >> (7 - resolvedXRow)) & 1;
+
+			uint8_t pallette = screen->obp0;
+			if ((spriteAttributes & OAM_ATTR_PALETTE) > 0)
+			{
+				pallette = screen->obp1;
+			}
+
+			uint8_t colorID = (pixelHighbit << 1) | pixelLowBit;
+			if (colorID == 0)
+			{
+				continue;
+			}
+			uint32_t pixelColour = getPixelColour(colorID, pallette);
+			screen->framebuffer[(pixelPositionY * GB_SCREEN_WIDTH) + pixelPositionX] = pixelColour;
+		}
+	}
 }

@@ -11,6 +11,9 @@
 #define HIGH_RAM_END_ADDRESS 0xFFFE
 
 #define IO_REG_JOYPAD 0xff00
+#define IO_REG_DMA 0xff46
+
+#define DMA_TRANSFER_LENGTH 0xA0
 #define IO_REG_INTERRUPT_FLAG 0xff0f
 #define IO_REG_INTERRUPT_ENABLE 0xffff
 

@@ -115,8 +115,7 @@ int main(int argc, char* args[])
 		{
 			gb.screen.frameReady = false;
 			ProcessEvents(&gb.joypad);
-			screenRenderBackground(&gb.screen, renderer.framebuffer);
-			GameBoyRendererPresent(&renderer);
+			GameBoyRendererPresent(&renderer, gb.screen.framebuffer);
 
 			QueryPerformanceCounter(&FrameEnd);
 

@@ -32,9 +32,9 @@ bool GameBoyRendererInit(SDl_GameBoyRenderer_t* renderer)
 	return true;
 }
 
-void GameBoyRendererPresent(SDl_GameBoyRenderer_t* renderer)
+void GameBoyRendererPresent(SDl_GameBoyRenderer_t* renderer, const uint32_t* framebuffer)
 {
-	SDL_UpdateTexture(renderer->texture, NULL, renderer->framebuffer, GB_SCREEN_WIDTH * sizeof(uint32_t));
+	SDL_UpdateTexture(renderer->texture, NULL, framebuffer, GB_SCREEN_WIDTH * sizeof(uint32_t));
 
 	SDL_RenderClear(renderer->renderer);
 	SDL_RenderCopy(renderer->renderer, renderer->texture, NULL, NULL);
