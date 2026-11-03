@@ -11,6 +11,9 @@
 #define CART_RAM_END_ADDRESS 0xBFFF
 #define CART_RAM_SIZE 0x2000
 
+#define CART_TYPE_MBC1_RAM_BATTERY 0x03
+#define CART_SAVE_PATH_MAX 260
+
 typedef struct {
 	uint8_t  entryPoint[4];
 	uint8_t  nintendoLogo[48];
@@ -39,6 +42,7 @@ typedef struct {
 	uint8_t romBank;
 	bool ramEnabled;
 	uint8_t ram[CART_RAM_SIZE];
+	char savePath[CART_SAVE_PATH_MAX];
 } cart_t;
 
 int loadCart(cart_t* cart, char* filename);
@@ -46,6 +50,10 @@ uint8_t readyByteFromCart(cart_t* cart, uint16_t address);
 void writeByteToCart(cart_t* cart, uint16_t address, uint8_t value);
 uint8_t readByteFromCartRam(cart_t* cart, uint16_t address);
 void writeByteToCartRam(cart_t* cart, uint16_t address, uint8_t value);
+void cartBuildSavePath(cart_t* cart, const char* romPath);
+bool cartHasBattery(cart_t* cart);
+void cartLoadRam(cart_t* cart);
+void cartSaveRam(cart_t* cart);
 
 	
 

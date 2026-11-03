@@ -97,6 +97,8 @@ int main(int argc, char* args[])
 	gameboy_t gb = { 0 };
 
 	loadCart(&gb.cart, args[1]);
+	cartBuildSavePath(&gb.cart, args[1]);
+	cartLoadRam(&gb.cart);
 	gameboyInit(&gb);
 
 	QueryPerformanceFrequency(&Frequency);
@@ -157,6 +159,7 @@ int main(int argc, char* args[])
 		
 	}
 
+	cartSaveRam(&gb.cart);
 	GameBoyRendererShutdown(&renderer);
 
 	printf("press enter to exit\n");

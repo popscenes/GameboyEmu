@@ -1,4 +1,5 @@
 #include "Cart.h"
+#include <string.h>
 
 int loadCart(cart_t* cart, char* filename)
 {
@@ -96,4 +97,68 @@ void writeByteToCartRam(cart_t* cart, uint16_t address, uint8_t value)
 	{
 		cart->ram[address - CART_RAM_START_ADDRESS] = value;
 	}
+}
+
+void cartBuildSavePath(cart_t* cart, const char* romPath)
+{
+	const char* newExtension = ".sav";
+	
+	strcpy_s(cart->savePath, CART_SAVE_PATH_MAX, romPath);
+	char* extension = strrchr(cart->savePath, '.');
+	size_t len = CART_SAVE_PATH_MAX - (extension - cart->savePath);
+	
+	strcpy_s(extension, len, newExtension);
+}
+
+bool cartHasBattery(cart_t* cart)
+{
+	// TODO
+	return cart->header->cartridgeType == CART_TYPE_MBC1_RAM_BATTERY;
+}
+
+void cartLoadRam(cart_t* cart)
+{
+	if (!cartHasBattery(cart))
+	{
+		return;
+	}
+
+	FILE* saveFile;
+	errno_t fopenresult = fopen_s(&saveFile, cart->savePath, "rb");
+	if (fopenresult != 0 || saveFile == NULL)
+	{
+		printf("no save file found %s %d\n", cart->savePath, fopenresult);
+		return;
+	}
+
+	size_t readBytes =  fread(cart->ram, 1, CART_RAM_SIZE, saveFile);
+	if (readBytes != CART_RAM_SIZE)
+	{
+		printf("save file no right size. %s\n", cart->savePath);
+	}
+	fclose(saveFile);
+}
+
+void cartSaveRam(cart_t* cart)
+{
+	if (!cartHasBattery(cart))
+	{
+		return;
+	}
+
+	FILE* saveFile;
+	errno_t fopenresult = fopen_s(&saveFile, cart->savePath, "wb");
+	if (fopenresult != 0 || saveFile == NULL)
+	{
+		printf("error writing save file %s %d\n", cart->savePath, fopenresult);
+		return;
+	}
+
+	size_t writeBytes = fwrite(cart->ram, 1, CART_RAM_SIZE, saveFile);
+	if (writeBytes != CART_RAM_SIZE)
+	{
+		printf("not all bytes written on save. %s\n", cart->savePath);
+	}
+
+	fclose(saveFile);
 }

@@ -356,3 +356,6 @@ MigrationBackup/
 # Game Boy ROMs
 *.gb
 *.gbc
+
+# Battery saves
+*.sav
