@@ -97,7 +97,7 @@ int main(int argc, char* args[])
 	gameboy_t gb = { 0 };
 
 	loadCart(&gb.cart, args[1]);
-	cpuInit(&gb);
+	gameboyInit(&gb);
 
 	QueryPerformanceFrequency(&Frequency);
 

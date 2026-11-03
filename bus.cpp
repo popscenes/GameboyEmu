@@ -22,7 +22,9 @@ static bool isScreenAddress(uint16_t address)
 		|| address == IO_REG_LYC
 		|| address == IO_REG_BGP
 		|| address == IO_REG_OBP0
-		|| address == IO_REG_OBP1;
+		|| address == IO_REG_OBP1
+		|| address == IO_REG_WY
+		|| address == IO_REG_WX;
 }
 
 static void oamDmaTransfer(gameboy_t* gb, uint8_t sourcePage)
@@ -57,6 +59,10 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	else if (isScreenAddress(adderss))
 	{
 		return screenReadByte(&gb->screen, adderss);
+	}
+	else if (adderss >= CART_RAM_START_ADDRESS && adderss <= CART_RAM_END_ADDRESS)
+	{
+		return readByteFromCartRam(&gb->cart, adderss);
 	}
 	else if (adderss >= IO_REG_DIV && adderss <= IO_REG_TAC)
 	{
@@ -111,6 +117,10 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	else if (isScreenAddress(adderss))
 	{
 		screenWriteByte(&gb->screen, adderss, value);
+	}
+	else if (adderss >= CART_RAM_START_ADDRESS && adderss <= CART_RAM_END_ADDRESS)
+	{
+		writeByteToCartRam(&gb->cart, adderss, value);
 	}
 	else if (adderss == IO_REG_DMA)
 	{

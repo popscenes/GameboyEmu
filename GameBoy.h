@@ -22,4 +22,5 @@ typedef struct gameboy_s {
 	joypad_t joypad;
 } gameboy_t;
 
+void gameboyInit(gameboy_t* gb);
 void gameboyStep(gameboy_t* gb);

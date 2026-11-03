@@ -20,6 +20,11 @@ const char * instructions[0x100];
 void cpuInit(gameboy_t* gb) {
 	instructions[0x00] = "NOP";
 	gb->cpu.pc = 0x100;
+	gb->cpu.af = 0x01B0;
+	gb->cpu.bc = 0x0013;
+	gb->cpu.de = 0x00D8;
+	gb->cpu.hl = 0x014D;
+	gb->cpu.sp = 0xFFFE;
 }
 
 void jump(gameboy_t* gb, uint16_t address)

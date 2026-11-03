@@ -56,6 +56,16 @@ uint8_t screenReadByte(screen_t* screen, uint16_t address)
 		return screen->lyc;
 	}
 
+	if (address == IO_REG_WX)
+	{
+		return screen->wx;
+	}
+
+	if (address == IO_REG_WY)
+	{
+		return screen->wy;
+	}
+
 	return 0;
 }
 
@@ -109,6 +119,16 @@ void screenWriteByte(screen_t* screen, uint16_t address, uint8_t value)
 	{
 		screen->lyc = value;
 	}
+
+	if (address == IO_REG_WX)
+	{
+		screen->wx = value;
+	}
+
+	if (address == IO_REG_WY)
+	{
+		screen->wy = value;
+	}
 }
 
 void screenStep(screen_t* screen, hardwareRegisters_t* hardwareRegisters, uint8_t cycles)
@@ -117,92 +137,101 @@ void screenStep(screen_t* screen, hardwareRegisters_t* hardwareRegisters, uint8_
 	{
 		screen->scanlineCycles = 0;
 		screen->ly = 0;
+		screen->windowLineCounter = 0;
 		screen->stat = screen->stat & ~STAT_MODE_MASK;
+		screen->lcdOffCycles += cycles;
+		if (screen->lcdOffCycles >= (CYCLES_PER_SCANLINE * SCANLINES_PER_FRAME))
+		{
+			screen->lcdOffCycles -= (CYCLES_PER_SCANLINE * SCANLINES_PER_FRAME);
+			screen->frameReady = true;
+		}
+
 		return;
 	}
 
 	screen->scanlineCycles += cycles;
 
 
-	if (screen->scanlineCycles >= CYCLES_PER_SCANLINE)
+if (screen->scanlineCycles >= CYCLES_PER_SCANLINE)
+{
+	screen->scanlineCycles -= CYCLES_PER_SCANLINE;
+	screen->ly++;
+
+	if (screen->ly == VBLANK_START_LINE)
 	{
-		screen->scanlineCycles -= CYCLES_PER_SCANLINE;
-		screen->ly++;
-
-		if (screen->ly == VBLANK_START_LINE)
-		{
-			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_VBLANK);
-			screen->frameReady = true;
-		}
-
-		else if (screen->ly == SCANLINES_PER_FRAME)
-		{
-			screen->ly = 0;
-		}
-
-		if (screen->ly == screen->lyc)
-		{
-			screen->stat = screen->stat | STAT_BIT_LYC_EQUAL;
-			if (screen->stat & STAT_BIT_LYC_INT)
-			{
-				requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
-			}
-		}
-		else
-		{
-			screen->stat = screen->stat & ~STAT_BIT_LYC_EQUAL;
-		}
+		requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_VBLANK);
+		screen->frameReady = true;
 	}
 
-	uint8_t screenMode = PPU_MODE_HBLANK;
-
-	if (screen->ly >= VBLANK_START_LINE)
+	else if (screen->ly == SCANLINES_PER_FRAME)
 	{
-		screenMode = PPU_MODE_VBLANK;
-	}
-	else if (screen->scanlineCycles < OAM_SCAN_END_CYCLE)
-	{
-		screenMode = PPU_MODE_OAM_SCAN;
-	}
-	else if (screen->scanlineCycles < DRAWING_END_CYCLE)
-	{
-		screenMode = PPU_MODE_DRAWING;
+		screen->ly = 0;
+		screen->windowLineCounter = 0;
 	}
 
-	uint8_t currentMode = screen->stat & STAT_MODE_MASK;
-	screen->stat = (screen->stat & ~STAT_MODE_MASK) | screenMode;
-
-	if (screenMode != currentMode)
+	if (screen->ly == screen->lyc)
 	{
-		if (screenMode == PPU_MODE_DRAWING)
-		{
-			screenRenderBackgroundLine(screen, screen->ly);
-			screenRenderSpritesLine(screen, screen->ly);
-		}
-
-		if (screenMode == PPU_MODE_HBLANK && (screen->stat & STAT_BIT_HBLANK_INT))
+		screen->stat = screen->stat | STAT_BIT_LYC_EQUAL;
+		if (screen->stat & STAT_BIT_LYC_INT)
 		{
 			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
 		}
-
-		if (screenMode == PPU_MODE_VBLANK && (screen->stat & STAT_BIT_VBLANK_INT))
-		{
-			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
-		}
-
-		if (screenMode == PPU_MODE_OAM_SCAN && (screen->stat & STAT_BIT_OAM_INT))
-		{
-			requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
-		}
-
-		
 	}
+	else
+	{
+		screen->stat = screen->stat & ~STAT_BIT_LYC_EQUAL;
+	}
+}
+
+uint8_t screenMode = PPU_MODE_HBLANK;
+
+if (screen->ly >= VBLANK_START_LINE)
+{
+	screenMode = PPU_MODE_VBLANK;
+}
+else if (screen->scanlineCycles < OAM_SCAN_END_CYCLE)
+{
+	screenMode = PPU_MODE_OAM_SCAN;
+}
+else if (screen->scanlineCycles < DRAWING_END_CYCLE)
+{
+	screenMode = PPU_MODE_DRAWING;
+}
+
+uint8_t currentMode = screen->stat & STAT_MODE_MASK;
+screen->stat = (screen->stat & ~STAT_MODE_MASK) | screenMode;
+
+if (screenMode != currentMode)
+{
+	if (screenMode == PPU_MODE_DRAWING)
+	{
+		screenRenderBackgroundLine(screen, screen->ly);
+		screenRenderSpritesLine(screen, screen->ly);
+	}
+
+	if (screenMode == PPU_MODE_HBLANK && (screen->stat & STAT_BIT_HBLANK_INT))
+	{
+		requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+	}
+
+	if (screenMode == PPU_MODE_VBLANK && (screen->stat & STAT_BIT_VBLANK_INT))
+	{
+		requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+	}
+
+	if (screenMode == PPU_MODE_OAM_SCAN && (screen->stat & STAT_BIT_OAM_INT))
+	{
+		requestInterrupt(hardwareRegisters, INTERRUPT_FLAG_STAT);
+	}
+
+
+}
 
 }
 
 uint32_t getPixelColour(uint8_t colorID, uint8_t pallette)
 {
-	
+
 	uint8_t shade = (pallette >> (colorID * 2)) & 0x3;
 	uint8_t gray = (255 - ((shade * 255) / 3));
 	uint32_t pixelColour = 0xFF000000 | (gray << 16) | (gray << 8) | gray;
@@ -212,10 +241,24 @@ uint32_t getPixelColour(uint8_t colorID, uint8_t pallette)
 
 void screenRenderBackgroundLine(screen_t* screen, uint8_t line)
 {
-	uint32_t tilemapAddress = BG_TILE_MAP_0_ADDRESS;
+
+	uint32_t bgTilemapAddress = BG_TILE_MAP_0_ADDRESS;
+	uint32_t windowTilemapAddress = BG_TILE_MAP_0_ADDRESS;
+	bool windowTileMode = false;
+
+	if ((screen->lcdc & LCDC_BIT_WINDOW_ENABLE) != 0)
+	{
+		windowTileMode = true;
+	}
+
 	if ((screen->lcdc & LCDC_BIT_BG_TILE_MAP_SELECT) != 0)
 	{
-		tilemapAddress = BG_TILE_MAP_1_ADDRESS;
+		bgTilemapAddress = BG_TILE_MAP_1_ADDRESS;
+	}
+
+	if ((screen->lcdc & LCDC_BIT_WINDOW_TILE_MAP_SELECT) != 0)
+	{
+		windowTilemapAddress = BG_TILE_MAP_1_ADDRESS;
 	}
 
 	bool signedTileDataMode = true;
@@ -224,15 +267,38 @@ void screenRenderBackgroundLine(screen_t* screen, uint8_t line)
 		signedTileDataMode = false;
 	}
 
+	bool windowVisibleOnLine = false;
+	if (windowTileMode && line >= screen->wy)
+	{
+		windowVisibleOnLine = true;
+	}
+
+	
 	
 	int32_t bgY = (line + screen->scy) & 255;
-	uint8_t pixelrow = (bgY % 8);
-
+	int32_t windowLeft = screen->wx - WINDOW_X_OFFSET;
+	bool windowDrewThisLine = false;
 	for (int32_t x = 0; x < GB_SCREEN_WIDTH; x++)
 	{
-		int32_t bgX = (x + screen->scx) & 255;
 		
-		int32_t vramTileAddress = (tilemapAddress + (bgY / 8) * 32 + (bgX / 8))- VRAM_START_ADDRESS;
+		
+		int32_t bgX = (x + screen->scx) & 255;
+
+		uint32_t tileMapAddresstoUse = bgTilemapAddress;
+		int32_t mapX = bgX;
+		int32_t mapY = bgY;
+
+		if (windowVisibleOnLine && x >= windowLeft)
+		{
+			tileMapAddresstoUse = windowTilemapAddress;
+			mapX = x - windowLeft;
+			mapY = screen->windowLineCounter;
+			windowDrewThisLine = true;
+		}
+
+		uint8_t pixelrow = (mapY % 8);
+		
+		int32_t vramTileAddress = (tileMapAddresstoUse + (mapY / 8) * 32 + (mapX / 8))- VRAM_START_ADDRESS;
 		int32_t tiledataStart = (signedTileDataMode == true) ? (TILE_DATA_SIGNED_BASE_ADDRESS + ((int8_t)screen->vram[vramTileAddress]) * GB_TILE_BYTES) :
 			(TILE_DATA_UNSIGNED_BASE_ADDRESS + ((uint8_t)screen->vram[vramTileAddress]) * GB_TILE_BYTES);
 
@@ -240,8 +306,8 @@ void screenRenderBackgroundLine(screen_t* screen, uint8_t line)
 		uint8_t lowByte = screen->vram[(tiledataStart + pixelrow * 2) - VRAM_START_ADDRESS];
 		uint8_t highByte = screen->vram[(tiledataStart + pixelrow * 2 + 1) - VRAM_START_ADDRESS];
 
-		uint8_t pixelLowBit = (lowByte >> (7 - (bgX%8))) & 1;
-		uint8_t pixelHighbit = (highByte >> (7 - (bgX%8))) & 1;
+		uint8_t pixelLowBit = (lowByte >> (7 - (mapX %8))) & 1;
+		uint8_t pixelHighbit = (highByte >> (7 - (mapX %8))) & 1;
 
 		uint8_t colorID = (pixelHighbit << 1) | pixelLowBit;
 		screen->bgColorIds[x] = colorID;
@@ -250,6 +316,11 @@ void screenRenderBackgroundLine(screen_t* screen, uint8_t line)
 
 		screen->framebuffer[line * GB_SCREEN_WIDTH + x] = pixelColour;
 	}
+
+	if (windowDrewThisLine)
+	{
+		screen->windowLineCounter++;
+	}	
 }
 
 void screenRenderSpritesLine(screen_t* screen, uint8_t line)

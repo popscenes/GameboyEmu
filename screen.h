@@ -14,6 +14,10 @@
 #define IO_REG_BGP 0xff47
 #define IO_REG_OBP0 0xff48
 #define IO_REG_OBP1 0xff49
+#define IO_REG_WY 0xff4a
+#define IO_REG_WX 0xff4b
+
+#define WINDOW_X_OFFSET 7
 
 #define OAM_START_ADDRESS 0xFE00
 #define OAM_END_ADDRESS 0xFE9F
@@ -25,6 +29,8 @@
 #define TILE_DATA_SIGNED_BASE_ADDRESS 0x9000
 
 #define LCDC_BIT_LCD_ENABLE 0x80
+#define LCDC_BIT_WINDOW_TILE_MAP_SELECT 0x40
+#define LCDC_BIT_WINDOW_ENABLE 0x20
 #define LCDC_BIT_BG_TILE_DATA_SELECT 0x10
 #define LCDC_BIT_BG_TILE_MAP_SELECT 0x08
 #define LCDC_BIT_OBJ_SIZE 0x04
@@ -91,7 +97,11 @@ typedef struct {
 	uint8_t bgp;
 	uint8_t obp0;
 	uint8_t obp1;
+	uint8_t wy;
+	uint8_t wx;
+	uint8_t windowLineCounter;
 	uint16_t scanlineCycles;
+	uint32_t lcdOffCycles;
 	bool frameReady;
 	uint32_t framebuffer[GB_SCREEN_WIDTH * GB_SCREEN_HEIGHT];
 	uint8_t bgColorIds[GB_SCREEN_WIDTH];

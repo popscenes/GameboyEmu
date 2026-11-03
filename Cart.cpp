@@ -47,22 +47,53 @@ uint8_t readyByteFromCart(cart_t* cart, uint16_t address)
 
 void writeByteToCart(cart_t* cart, uint16_t address, uint8_t value)
 {
-	if (address < 0x2000 || address > 0x3FFF)
+	
+	if (address <= CART_RAM_ENABLE_END_ADDRESS)
 	{
+		if ((value & 0x0F) == CART_RAM_ENABLE_VALUE)
+		{
+			cart->ramEnabled = true;
+		}
+		else
+		{
+			cart->ramEnabled = false;
+		}
 		return;
 	}
 
-	value = value & 0x1F;
-
-
-	if (value == 0)
+	if (address >= 0x2000 && address <= 0x3FFF)
 	{
-		value = 1;
+		value = value & 0x1F;
+
+
+		if (value == 0)
+		{
+			value = 1;
+		}
+
+		uint8_t maxBanks = 2 << cart->header->romSize;
+		value = value & (maxBanks - 1);
+
+		cart->romBank = value & 0x1F;
+		return;
 	}
 
-	uint8_t maxBanks = 2 << cart->header->romSize;
-	value = value & (maxBanks - 1);
+	
+}
 
-	cart->romBank = value & 0x1F;
+uint8_t readByteFromCartRam(cart_t* cart, uint16_t address)
+{
+	if (cart->ramEnabled)
+	{
+		return cart->ram[address - CART_RAM_START_ADDRESS];
+	}
+	return 0xFF;
+}
 
+void writeByteToCartRam(cart_t* cart, uint16_t address, uint8_t value)
+{
+	if (cart->ramEnabled)
+	{
+		cart->ram[address - CART_RAM_START_ADDRESS] = value;
+	}
 }
