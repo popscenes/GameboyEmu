@@ -7,6 +7,7 @@
 #include <queue>
 
 #include "SDL_GameboyRenderer.h"
+#include "SDL_GameboyAudio.h"
 #include "debug.h"
 #include <string.h>
 
@@ -94,6 +95,12 @@ int main(int argc, char* args[])
 		return 0;
 	}
 
+	SDL_GameBoyAudio_t audio;
+	if (!GameBoyAudioInit(&audio, APU_SAMPLE_RATE))
+	{
+		printf("audio init failed, continuing without sound\n");
+	}
+
 	gameboy_t gb = { 0 };
 
 	loadCart(&gb.cart, args[1]);
@@ -118,6 +125,8 @@ int main(int argc, char* args[])
 			gb.screen.frameReady = false;
 			ProcessEvents(&gb.joypad);
 			GameBoyRendererPresent(&renderer, gb.screen.framebuffer);
+			GameBoyAudioQueue(&audio, gb.apu.samples, gb.apu.sampleCount);
+			gb.apu.sampleCount = 0;
 
 			QueryPerformanceCounter(&FrameEnd);
 
@@ -160,6 +169,7 @@ int main(int argc, char* args[])
 	}
 
 	cartSaveRam(&gb.cart);
+	GameBoyAudioShutdown(&audio);
 	GameBoyRendererShutdown(&renderer);
 
 	printf("press enter to exit\n");

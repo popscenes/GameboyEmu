@@ -4,6 +4,7 @@
 #include "screen.h"
 #include "GameBoy.h"
 #include "debug.h"
+#include "apu.h"
 
 void requestInterrupt(hardwareRegisters_t* hardwareRegisters, uint8_t flagBit)
 {
@@ -25,6 +26,11 @@ static bool isScreenAddress(uint16_t address)
 		|| address == IO_REG_OBP1
 		|| address == IO_REG_WY
 		|| address == IO_REG_WX;
+}
+
+static bool isApuAddress(uint16_t address)
+{
+	return address >= APU_REGISTERS_START_ADDRESS && address <= APU_END_ADDRESS;
 }
 
 static void oamDmaTransfer(gameboy_t* gb, uint8_t sourcePage)
@@ -71,6 +77,10 @@ uint8_t readByteFromAddress(gameboy_t* gb, uint16_t adderss)
 	else if (adderss == IO_REG_JOYPAD)
 	{
 		return joypadReadByte(&gb->joypad);
+	}
+	else if (isApuAddress(adderss))
+	{
+		return apuReadByte(&gb->apu, adderss);
 	}
 	else if (adderss == IO_REG_INTERRUPT_FLAG)
 	{
@@ -139,6 +149,10 @@ void writeByteToAddress(gameboy_t* gb, uint16_t adderss, uint8_t value)
 	else if (adderss == IO_REG_JOYPAD)
 	{
 		joypadWriteByte(&gb->joypad, value);
+	}
+	else if (isApuAddress(adderss))
+	{
+		apuWriteByte(&gb->apu, adderss, value);
 	}
 	else if (adderss == IO_REG_INTERRUPT_FLAG)
 	{

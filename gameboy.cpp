@@ -8,6 +8,8 @@ void gameboyInit(gameboy_t* gb)
 	gb->screen.bgp = 0xFC;
 	gb->screen.stat = 0x85;
 	gb->hardwareRegisters.interruptFlag = 0xE1;
+
+	apuInit(&gb->apu);
 }
 
 void gameboyStep(gameboy_t* gb)
@@ -15,5 +17,6 @@ void gameboyStep(gameboy_t* gb)
 	cpuStep(gb);
 	timerStep(&gb->timer, &gb->hardwareRegisters, cpuCurrentIstructionCycles(gb));
 	screenStep(&gb->screen, &gb->hardwareRegisters, cpuCurrentIstructionCycles(gb));
+	apuStep(&gb->apu, cpuCurrentIstructionCycles(gb));
 	HandleInterrupts(gb);
 }

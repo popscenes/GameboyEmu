@@ -11,6 +11,7 @@
 #include "screen.h"
 #include "Cart.h"
 #include "joypad.h"
+#include "apu.h"
 
 typedef struct gameboy_s {
 	cpu_t cpu;
@@ -20,6 +21,7 @@ typedef struct gameboy_s {
 	screen_t screen;
 	cart_t cart;
 	joypad_t joypad;
+	apu_t apu;
 } gameboy_t;
 
 void gameboyInit(gameboy_t* gb);

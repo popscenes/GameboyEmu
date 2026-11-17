@@ -157,6 +157,8 @@
     <ClCompile Include="screen.cpp" />
     <ClCompile Include="gameboy.cpp" />
     <ClCompile Include="joypad.cpp" />
+    <ClCompile Include="apu.cpp" />
+    <ClCompile Include="SDL_GameboyAudio.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bus.h" />
@@ -168,6 +170,8 @@
     <ClInclude Include="SDL_GameboyRenderer.h" />
     <ClInclude Include="timer.h" />
     <ClInclude Include="screen.h" />
+    <ClInclude Include="apu.h" />
+    <ClInclude Include="SDL_GameboyAudio.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="C:\Users\Anthony Borg\Downloads\GBCPUman.pdf" />
