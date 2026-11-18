@@ -59,6 +59,10 @@
 #define PULSE_FREQUENCY_TIMER_MULTIPLIER 4
 #define CHANNEL_MAX_VOLUME 15
 
+#define FRAME_SEQUENCER_PERIOD 8192 // CPU cycles per frame sequencer step (512 Hz)
+#define FRAME_SEQUENCER_STEPS 8
+#define PULSE_LENGTH_MAX 64
+
 #define APU_CLOCK_HZ 4194304
 #define APU_SAMPLE_RATE 44100
 #define APU_SAMPLE_BUFFER_SIZE 4096
@@ -69,12 +73,16 @@ typedef struct {
 	uint8_t volume;
 	uint8_t dutyStep;
 	uint16_t frequencyTimer;
+	uint8_t lengthCounter;
+	uint8_t envelopeTimer;
 } pulseChannel_t;
 
 typedef struct {
 	uint8_t registers[APU_REGISTER_COUNT];
 	uint8_t waveRam[WAVE_RAM_SIZE];
 	pulseChannel_t channel2;
+	uint16_t frameSequencerCycles;
+	uint8_t frameSequencerStep;
 	uint32_t sampleCycleAccumulator;
 	float samples[APU_SAMPLE_BUFFER_SIZE];
 	uint32_t sampleCount;

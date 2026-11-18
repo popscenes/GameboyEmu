@@ -4,6 +4,9 @@ static void apuTriggerChannel2(apu_t* apu);
 static void apuStepChannel2(apu_t* apu, uint8_t cycles);
 static uint8_t apuChannel2Output(apu_t* apu);
 static float apuMixSample(apu_t* apu);
+static void apuStepFrameSequencer(apu_t* apu, uint8_t cycles);
+static void apuClockChannel2Length(apu_t* apu);
+static void apuClockChannel2Envelope(apu_t* apu);
 
 // Bits that always read back as 1 (write-only or unused bits), indexed from NR10
 static const uint8_t apuRegisterReadMasks[APU_REGISTER_COUNT] = {
@@ -31,6 +34,7 @@ void apuInit(apu_t* apu)
 
 void apuStep(apu_t* apu, uint8_t cycles)
 {
+	apuStepFrameSequencer(apu, cycles);
 	apuStepChannel2(apu, cycles);
 
 	apu->sampleCycleAccumulator += cycles * APU_SAMPLE_RATE;
@@ -87,6 +91,21 @@ void apuWriteByte(apu_t* apu, uint16_t address, uint8_t value)
 
 	APU_REG(apu, address) = value;
 
+	if (address == IO_REG_NR21)
+	{
+		// TODO (you): reload channel2.lengthCounter from the low 6 bits of value
+		apu->channel2.lengthCounter = PULSE_LENGTH_MAX - (value & NRX1_LENGTH_MASK);
+	}
+
+	if (address == IO_REG_NR22)
+	{
+		// TODO (you): if the DAC bits (NRX2_DAC_MASK) are all zero, disable channel 2
+		if ((value & NRX2_DAC_MASK) == 0)
+		{
+			apu->channel2.enabled = false;
+		}
+	}
+
 	if (address == IO_REG_NR24 && (value & NRX4_TRIGGER_BIT))
 	{
 		apuTriggerChannel2(apu);
@@ -106,8 +125,18 @@ static void apuTriggerChannel2(apu_t* apu)
 	uint8_t nr22 = APU_REG(apu, IO_REG_NR22);
 
 	apu->channel2.enabled = true;
+	if ((nr22 & NRX2_DAC_MASK) == 0)
+	{
+		apu->channel2.enabled = false;
+	}
 	apu->channel2.volume = (nr22 & NRX2_VOLUME_MASK) >> NRX2_VOLUME_SHIFT;
 	apu->channel2.frequencyTimer = apuChannel2Period(apu);
+	if (apu->channel2.lengthCounter == 0)
+	{
+		apu->channel2.lengthCounter = PULSE_LENGTH_MAX;
+	}
+
+	apu->channel2.envelopeTimer = (nr22 & NRX2_ENVELOPE_PERIOD_MASK);
 }
 
 static void apuStepChannel2(apu_t* apu, uint8_t cycles)
@@ -156,4 +185,88 @@ static float apuMixSample(apu_t* apu)
 {
 	
 	return apuChannel2Output(apu) / (float)CHANNEL_MAX_VOLUME;
+}
+
+// Called every instruction. Every FRAME_SEQUENCER_PERIOD cycles, advance
+// frameSequencerStep (0-7, wrapping) and clock length on even steps,
+// envelope on step 7.
+static void apuStepFrameSequencer(apu_t* apu, uint8_t cycles)
+{
+	uint8_t remainCycles = cycles;
+	
+	if (apu->frameSequencerCycles + remainCycles < FRAME_SEQUENCER_PERIOD)
+	{
+		apu->frameSequencerCycles += remainCycles;
+		return;
+	}
+
+	apu->frameSequencerCycles = (apu->frameSequencerCycles + remainCycles) - FRAME_SEQUENCER_PERIOD;
+
+	if (apu->frameSequencerStep % 2 == 0)
+	{
+		apuClockChannel2Length(apu);
+	}
+	if (apu->frameSequencerStep == 7)
+	{
+		apuClockChannel2Envelope(apu);
+	}
+
+	apu->frameSequencerStep++;
+	if (apu->frameSequencerStep > 7)
+	{
+		apu->frameSequencerStep = 0;
+	}
+
+	
+}
+
+// 256 Hz. If length is enabled in NR24, count down and turn the channel off at 0.
+static void apuClockChannel2Length(apu_t* apu)
+{
+	uint8_t nr24 = APU_REG(apu, IO_REG_NR24);
+	if ((nr24 & NRX4_LENGTH_ENABLE_BIT) && apu->channel2.lengthCounter > 0)
+	{
+		apu->channel2.lengthCounter--;
+		if (apu->channel2.lengthCounter == 0)
+		{
+			apu->channel2.enabled = false;
+		}
+	}
+
+	
+}
+
+// 64 Hz. Step volume up or down by 1 every NR22-period clocks.
+static void apuClockChannel2Envelope(apu_t* apu)
+{
+	uint8_t nr22 = APU_REG(apu, IO_REG_NR22);
+	uint8_t period = (nr22 & NRX2_ENVELOPE_PERIOD_MASK);
+	if (period == 0)
+	{
+		return;
+	}
+
+	apu->channel2.envelopeTimer--;
+	if (apu->channel2.envelopeTimer == 0)
+	{
+		apu->channel2.envelopeTimer = period;
+		if (nr22 & NRX2_ENVELOPE_INCREASE_BIT)
+		{
+			apu->channel2.volume++;
+			if (apu->channel2.volume > CHANNEL_MAX_VOLUME)
+			{
+				apu->channel2.volume = CHANNEL_MAX_VOLUME;
+			}
+		}
+		else
+		{
+			if (apu->channel2.volume >  0)
+			{
+				apu->channel2.volume--;
+			}
+		}
+
+		
+	}
+
 }
